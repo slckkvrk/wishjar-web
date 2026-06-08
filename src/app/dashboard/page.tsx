@@ -99,7 +99,7 @@ export default function DashboardPage() {
 
         <section className="mb-8 rounded-3xl border border-white/10 bg-white/10 p-8 text-white shadow-2xl backdrop-blur">
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-violet-200">
-            Dashboard
+            Home
           </p>
 
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
@@ -195,9 +195,12 @@ export default function DashboardPage() {
                       $0 supported so far
                     </p>
 
-                    <button className="rounded-full border px-4 py-2 text-sm font-semibold">
-                      View Jar
-                    </button>
+                    <a
+  href={`/jars/${jar.id}`}
+  className="rounded-full border px-4 py-2 text-sm font-semibold"
+>
+  View Jar
+</a>
                   </div>
                 </div>
               ))}
