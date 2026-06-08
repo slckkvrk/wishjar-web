@@ -65,7 +65,7 @@ export default function JarDetailPage() {
   .order("created_at", { ascending: false });
 
 if (wishesError) {
-  setErrorMessage(wishesError.message);
+  setMessage(wishesError.message);
   return;
 }
 
