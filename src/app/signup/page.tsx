@@ -34,7 +34,7 @@ export default function SignUpPage() {
     }
 
     setSuccess(true);
-    window.location.href = "/dashboard";
+    window.location.href = "/setup/username";
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

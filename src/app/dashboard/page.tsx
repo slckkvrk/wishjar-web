@@ -16,6 +16,7 @@ const MAX_JARS = 3;
 
 export default function DashboardPage() {
   const [email, setEmail] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const [jars, setJars] = useState<Jar[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,6 +30,14 @@ export default function DashboardPage() {
       }
 
       setEmail(userData.user.email ?? null);
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", userData.user.id)
+        .single();
+
+      setUsername(profileData?.username ?? null);
 
       const { data: jarsData, error } = await supabase
         .from("jars")
@@ -85,12 +94,22 @@ export default function DashboardPage() {
             <span className="text-2xl font-extrabold tracking-tight text-violet-200">WishJar</span>
           </a>
 
-          <button
-            onClick={handleLogout}
-            className="rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-semibold text-white backdrop-blur"
-          >
-            Logout
-          </button>
+          <div className="flex items-center gap-3">
+            {username && (
+              <a
+                href={`/u/${username}`}
+                className="rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-semibold text-white backdrop-blur hover:bg-white/20"
+              >
+                @{username}
+              </a>
+            )}
+            <button
+              onClick={handleLogout}
+              className="rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-semibold text-white backdrop-blur"
+            >
+              Logout
+            </button>
+          </div>
         </header>
 
         {/* Welcome banner */}
