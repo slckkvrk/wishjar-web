@@ -95,6 +95,12 @@ export default function DashboardPage() {
           </a>
 
           <div className="flex items-center gap-3">
+            <a
+              href="/feed"
+              className="rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-semibold text-white backdrop-blur hover:bg-white/20"
+            >
+              Feed
+            </a>
             {username && (
               <a
                 href={`/u/${username}`}

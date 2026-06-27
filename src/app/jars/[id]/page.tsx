@@ -11,6 +11,7 @@ type Jar = {
   category: string;
   goal_amount: number | null;
   created_at: string;
+  user_id: string;
 };
 
 type Wish = {
@@ -28,7 +29,8 @@ export default function JarDetailPage() {
 
   const [jar, setJar] = useState<Jar | null>(null);
   const [wishes, setWishes] = useState<Wish[]>([]);
-  const [email, setEmail] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [ownerUsername, setOwnerUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [copied, setCopied] = useState(false);
@@ -43,11 +45,9 @@ export default function JarDetailPage() {
         return;
       }
 
-      setEmail(userData.user.email ?? null);
-
       const { data, error } = await supabase
         .from("jars")
-        .select("id, title, description, category, goal_amount, created_at")
+        .select("id, title, description, category, goal_amount, created_at, user_id")
         .eq("id", jarId)
         .single();
 
@@ -58,6 +58,14 @@ export default function JarDetailPage() {
       }
 
       setJar(data);
+      setIsOwner(data.user_id === userData.user.id);
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", data.user_id)
+        .single();
+      setOwnerUsername(profileData?.username ?? null);
 
       const { data: wishesData, error: wishesError } = await supabase
         .from("wishes")
@@ -172,15 +180,24 @@ export default function JarDetailPage() {
               {jar.description && (
                 <p className="mt-3 max-w-2xl text-white/70">{jar.description}</p>
               )}
-              <p className="mt-4 text-xs text-white/40">Owner: {email}</p>
+              {ownerUsername && (
+                <a
+                  href={`/u/${ownerUsername}`}
+                  className="mt-4 inline-block text-xs text-violet-300 hover:text-violet-200"
+                >
+                  @{ownerUsername}
+                </a>
+              )}
             </div>
 
-            <a
-              href={`/jars/${jar.id}/edit`}
-              className="shrink-0 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur hover:bg-white/20"
-            >
-              Edit Jar
-            </a>
+            {isOwner && (
+              <a
+                href={`/jars/${jar.id}/edit`}
+                className="shrink-0 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur hover:bg-white/20"
+              >
+                Edit Jar
+              </a>
+            )}
           </div>
         </section>
 
@@ -199,12 +216,14 @@ export default function JarDetailPage() {
                 </p>
               </div>
 
-              <a
-                href={`/jars/${jar.id}/wishes/new`}
-                className="shrink-0 rounded-full bg-violet-700 px-4 py-2 text-sm font-semibold text-white"
-              >
-                + Add Item
-              </a>
+              {isOwner && (
+                <a
+                  href={`/jars/${jar.id}/wishes/new`}
+                  className="shrink-0 rounded-full bg-violet-700 px-4 py-2 text-sm font-semibold text-white"
+                >
+                  + Add Item
+                </a>
+              )}
             </div>
 
             {wishes.length === 0 ? (
@@ -248,21 +267,23 @@ export default function JarDetailPage() {
                             ${wish.price.toLocaleString()}
                           </span>
                         )}
-                        <div className="flex gap-2">
-                          <a
-                            href={`/jars/${jar.id}/wishes/${wish.id}/edit`}
-                            className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 hover:bg-violet-100"
-                          >
-                            Edit
-                          </a>
-                          <button
-                            onClick={() => handleDeleteWish(wish.id)}
-                            disabled={deletingId === wish.id}
-                            className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50"
-                          >
-                            {deletingId === wish.id ? "..." : "Remove"}
-                          </button>
-                        </div>
+                        {isOwner && (
+                          <div className="flex gap-2">
+                            <a
+                              href={`/jars/${jar.id}/wishes/${wish.id}/edit`}
+                              className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 hover:bg-violet-100"
+                            >
+                              Edit
+                            </a>
+                            <button
+                              onClick={() => handleDeleteWish(wish.id)}
+                              disabled={deletingId === wish.id}
+                              className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50"
+                            >
+                              {deletingId === wish.id ? "..." : "Remove"}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </article>
