@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
@@ -15,9 +16,12 @@ export default function SignUpPage() {
       setMessage("Please enter your email and password.");
       return;
     }
-
-    if (password.length < 6) {
-      setMessage("Password must be at least 6 characters.");
+    if (password.length < 8) {
+      setMessage("Password must be at least 8 characters.");
+      return;
+    }
+    if (!agreed) {
+      setMessage("Please accept the Terms of Service and Privacy Policy to continue.");
       return;
     }
 
@@ -79,9 +83,10 @@ export default function SignUpPage() {
                 <input
                   type="email"
                   placeholder="you@example.com"
+                  autoComplete="email"
                   className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder-white/30 outline-none focus:border-violet-400 focus:bg-white/15"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value.trim())}
                   onKeyDown={handleKeyDown}
                 />
               </div>
@@ -90,7 +95,8 @@ export default function SignUpPage() {
                 <label className="mb-2 block text-sm font-semibold text-white/80">Password</label>
                 <input
                   type="password"
-                  placeholder="At least 6 characters"
+                  placeholder="At least 8 characters"
+                  autoComplete="new-password"
                   className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder-white/30 outline-none focus:border-violet-400 focus:bg-white/15"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -98,14 +104,45 @@ export default function SignUpPage() {
                 />
               </div>
 
+              {/* KVKK / GDPR consent checkbox */}
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4">
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-violet-500"
+                />
+                <span className="text-xs leading-5 text-white/60">
+                  I am at least 13 years old and I agree to WishJar&apos;s{" "}
+                  <a
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-violet-300 underline"
+                  >
+                    Terms of Service
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-violet-300 underline"
+                  >
+                    Privacy Policy
+                  </a>
+                  {" "}(including cross-border data transfer to the US via Supabase).
+                </span>
+              </label>
+
               {message && (
                 <p className="rounded-xl bg-red-500/20 px-4 py-3 text-sm text-red-300">{message}</p>
               )}
 
               <button
                 onClick={handleSignUp}
-                disabled={loading}
-                className="w-full rounded-full bg-violet-600 py-4 font-semibold text-white hover:bg-violet-500 disabled:opacity-60"
+                disabled={loading || !agreed}
+                className="w-full rounded-full bg-violet-600 py-4 font-semibold text-white hover:bg-violet-500 disabled:opacity-50"
               >
                 {loading ? "Creating account..." : "Create Account"}
               </button>

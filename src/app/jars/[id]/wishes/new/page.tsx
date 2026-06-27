@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { isValidUrl, sanitizeText, isValidPrice } from "@/lib/validate";
 
 export default function NewWishPage() {
   const params = useParams();
@@ -35,13 +36,25 @@ export default function NewWishPage() {
       return;
     }
 
+    if (productUrl && !isValidUrl(productUrl)) {
+      setErrorMessage("Please enter a valid product URL (must start with http:// or https://).");
+      setLoading(false);
+      return;
+    }
+
+    if (price && !isValidPrice(price)) {
+      setErrorMessage("Please enter a valid price.");
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.from("wishes").insert({
       jar_id: jarId,
       user_id: user.id,
-      title,
-      product_url: productUrl || null,
+      title: sanitizeText(title, 200),
+      product_url: productUrl ? sanitizeText(productUrl, 2000) : null,
       price: price ? Number(price) : null,
-      description: description || null,
+      description: description ? sanitizeText(description, 1000) : null,
     });
 
     if (error) {

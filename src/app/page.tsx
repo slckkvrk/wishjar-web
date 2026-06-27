@@ -105,7 +105,10 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="border-t border-white/10 pt-4 text-xs text-white/30">
-          WishJar · Made by slckkvrk
+          WishJar · Made by slckkvrk ·{" "}
+          <a href="/privacy" className="underline hover:text-white/60">Privacy Policy</a>
+          {" · "}
+          <a href="/terms" className="underline hover:text-white/60">Terms of Service</a>
         </footer>
 
       </section>

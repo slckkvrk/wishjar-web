@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { isValidUrl, sanitizeText, isValidPrice } from "@/lib/validate";
 
 export default function EditWishPage() {
   const params = useParams();
@@ -57,16 +58,26 @@ export default function EditWishPage() {
       return;
     }
 
+    if (productUrl && !isValidUrl(productUrl)) {
+      setMessage("Please enter a valid product URL.");
+      return;
+    }
+
+    if (price && !isValidPrice(price)) {
+      setMessage("Please enter a valid price.");
+      return;
+    }
+
     setSaving(true);
     setMessage("");
 
     const { error } = await supabase
       .from("wishes")
       .update({
-        title: title.trim(),
-        product_url: productUrl.trim() || null,
+        title: sanitizeText(title, 200),
+        product_url: productUrl ? sanitizeText(productUrl, 2000) : null,
         price: price ? Number(price) : null,
-        description: description.trim() || null,
+        description: description ? sanitizeText(description, 1000) : null,
       })
       .eq("id", wishId);
 
