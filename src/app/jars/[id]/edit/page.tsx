@@ -26,9 +26,11 @@ export default function EditJarPage() {
   const [category, setCategory] = useState("New Home");
   const [goalAmount, setGoalAmount] = useState("");
   const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("active");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [completing, setCompleting] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -42,7 +44,7 @@ export default function EditJarPage() {
 
       const { data, error } = await supabase
         .from("jars")
-        .select("id, title, description, category, goal_amount")
+        .select("id, title, description, category, goal_amount, status")
         .eq("id", jarId)
         .single();
 
@@ -56,6 +58,7 @@ export default function EditJarPage() {
       setCategory(data.category);
       setGoalAmount(data.goal_amount ? String(data.goal_amount) : "");
       setDescription(data.description ?? "");
+      setStatus(data.status ?? "active");
       setLoading(false);
     };
 
@@ -89,6 +92,43 @@ export default function EditJarPage() {
     }
 
     router.push(`/jars/${jarId}`);
+  };
+
+  const handleComplete = async () => {
+    if (!confirm("Mark this jar as complete? This will celebrate it for all members!")) return;
+
+    setCompleting(true);
+
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", userData.user.id)
+      .single();
+
+    const { error } = await supabase
+      .from("jars")
+      .update({ status: "completed" })
+      .eq("id", jarId);
+
+    if (error) {
+      setMessage(error.message);
+      setCompleting(false);
+      return;
+    }
+
+    await supabase.channel("jar-completions").send({
+      type: "broadcast",
+      event: "jar_completed",
+      payload: {
+        jar_title: title,
+        username: profile?.username ?? "someone",
+      },
+    });
+
+    window.location.href = "/dashboard";
   };
 
   const handleDelete = async () => {
@@ -225,6 +265,30 @@ export default function EditJarPage() {
             </button>
           </div>
         </section>
+
+        {/* Complete jar */}
+        {status === "active" && (
+          <section className="mt-6 rounded-3xl border border-green-100 bg-white p-6 shadow-xl">
+            <h2 className="mb-1 text-sm font-bold text-green-700">Mark as Complete</h2>
+            <p className="mb-4 text-sm text-gray-500">
+              When your jar goal is reached, celebrate it with everyone on WishJar.
+              Confetti will appear on all members&apos; screens.
+            </p>
+            <button
+              onClick={handleComplete}
+              disabled={completing}
+              className="rounded-full border border-green-300 bg-green-50 px-6 py-3 text-sm font-semibold text-green-700 hover:bg-green-100 disabled:opacity-50"
+            >
+              {completing ? "Completing..." : "🎉 Mark as Complete"}
+            </button>
+          </section>
+        )}
+
+        {status === "completed" && (
+          <section className="mt-6 rounded-3xl border border-green-200 bg-green-50 p-6 shadow-xl">
+            <p className="text-sm font-bold text-green-700">🎉 This jar is completed!</p>
+          </section>
+        )}
 
         {/* Danger zone */}
         <section className="mt-6 rounded-3xl border border-red-100 bg-white p-6 shadow-xl">

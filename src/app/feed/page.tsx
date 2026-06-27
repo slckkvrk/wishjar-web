@@ -14,8 +14,18 @@ type Post = {
   jar_title: string | null;
 };
 
+type TrendingJar = {
+  id: string;
+  title: string;
+  category: string;
+  goal_amount: number | null;
+  username: string;
+  wish_count: number;
+};
+
 export default function FeedPage() {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [trendingJars, setTrendingJars] = useState<TrendingJar[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
 
@@ -33,6 +43,45 @@ export default function FeedPage() {
         .eq("id", userData.user.id)
         .single();
       setCurrentUsername(myProfile?.username ?? null);
+
+      // Trending jars: all active jars except own, sorted by wish count
+      const { data: allJars } = await supabase
+        .from("jars")
+        .select("id, title, category, goal_amount, user_id")
+        .eq("status", "active")
+        .neq("user_id", userData.user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (allJars && allJars.length > 0) {
+        const jarIds = allJars.map((j) => j.id);
+        const ownerIds = [...new Set(allJars.map((j) => j.user_id))];
+
+        const [{ data: wishCounts }, { data: jarProfiles }] = await Promise.all([
+          supabase.from("wishes").select("jar_id").in("jar_id", jarIds),
+          supabase.from("profiles").select("id, username").in("id", ownerIds),
+        ]);
+
+        const countMap: Record<string, number> = {};
+        (wishCounts ?? []).forEach((w) => {
+          countMap[w.jar_id] = (countMap[w.jar_id] ?? 0) + 1;
+        });
+        const profileMap = Object.fromEntries((jarProfiles ?? []).map((p) => [p.id, p.username]));
+
+        const trending: TrendingJar[] = allJars
+          .map((j) => ({
+            id: j.id,
+            title: j.title,
+            category: j.category,
+            goal_amount: j.goal_amount,
+            username: profileMap[j.user_id] ?? "unknown",
+            wish_count: countMap[j.id] ?? 0,
+          }))
+          .sort((a, b) => b.wish_count - a.wish_count)
+          .slice(0, 5);
+
+        setTrendingJars(trending);
+      }
 
       const { data: rawPosts } = await supabase
         .from("posts")
@@ -117,6 +166,41 @@ export default function FeedPage() {
             </a>
           </div>
         </header>
+
+        {/* Trending Jars */}
+        {trendingJars.length > 0 && (
+          <section className="mb-6 rounded-3xl border border-white/10 bg-white/10 p-6 backdrop-blur">
+            <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-violet-300">
+              Trending Jars
+            </h2>
+            <div className="space-y-3">
+              {trendingJars.map((jar) => (
+                <a
+                  key={jar.id}
+                  href={`/jars/${jar.id}`}
+                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/10 p-4 hover:bg-white/20"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-white">{jar.title}</span>
+                      <span className="rounded-full bg-violet-500/30 px-2 py-0.5 text-xs font-semibold text-violet-200">
+                        {jar.category}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-white/40">
+                      by @{jar.username} · {jar.wish_count} item{jar.wish_count !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  {jar.goal_amount && (
+                    <span className="shrink-0 text-sm font-bold text-violet-300">
+                      ${jar.goal_amount.toLocaleString()}
+                    </span>
+                  )}
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Feed */}
         <div className="space-y-4">
