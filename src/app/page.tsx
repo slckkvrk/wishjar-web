@@ -1,117 +1,114 @@
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-white text-black">
-      <section className="mx-auto flex min-h-screen max-w-5xl flex-col px-6 py-10">
+    <div className="min-h-screen bg-[#f0eeea] text-gray-800">
 
-        {/* Header */}
-        <header className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <svg viewBox="0 0 64 64" className="h-10 w-10 drop-shadow-sm" aria-hidden="true">
-              <defs>
-                <linearGradient id="jarGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#9B6CFF" />
-                  <stop offset="100%" stopColor="#4F32C8" />
-                </linearGradient>
-              </defs>
-              <rect x="18" y="6" width="28" height="8" rx="3" fill="#9B6CFF" />
-              <rect x="12" y="16" width="40" height="42" rx="10" fill="url(#jarGradient)" />
-              <path
-                d="M32 24.5L35.2 31L42.3 32L37.1 37L38.4 44L32 40.6L25.6 44L26.9 37L21.7 32L28.8 31L32 24.5Z"
-                fill="white"
-              />
+      {/* Top bar */}
+      <header className="border-b border-[#1e0d5c] bg-[#2c1875]">
+        <div className="mx-auto flex h-10 max-w-5xl items-center justify-between px-4">
+          <div className="flex items-center gap-1.5">
+            <svg viewBox="0 0 64 64" className="h-5 w-5" aria-hidden="true">
+              <rect x="18" y="6" width="28" height="8" rx="2" fill="#a78bfa" />
+              <rect x="12" y="16" width="40" height="42" rx="6" fill="#7c3aed" />
+              <path d="M32 24L34.5 29.5L41 30.5L36.5 35L37.8 42L32 38.5L26.2 42L27.5 35L23 30.5L29.5 29.5Z" fill="white" />
             </svg>
-            <span className="text-2xl font-extrabold tracking-tight text-violet-200">WishJar</span>
+            <span className="text-sm font-bold text-white">WishJar</span>
           </div>
-
-          <nav className="flex gap-3 text-sm">
-            <a
-              href="/login"
-              className="rounded-full border border-white/20 px-4 py-2 font-semibold text-white/80 hover:bg-white/10"
-            >
-              Login
-            </a>
-            <a
-              href="/signup"
-              className="rounded-full bg-violet-600 px-4 py-2 font-semibold text-white hover:bg-violet-500"
-            >
-              Sign Up
+          <nav className="flex items-center gap-2 text-sm">
+            <a href="/login" className="px-3 py-1.5 text-white/80 hover:text-white">Sign in</a>
+            <a href="/signup" className="rounded bg-violet-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-violet-400">
+              Join free
             </a>
           </nav>
-        </header>
+        </div>
+      </header>
 
-        {/* Hero */}
-        <div className="grid flex-1 items-center gap-10 py-20 md:grid-cols-2">
-          <div>
-            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-violet-400">
-              Social wishlists for real life
-            </p>
-
-            <h1 className="mb-6 text-5xl font-bold leading-tight text-white md:text-6xl">
-              Collect Wishes.
-              <br />
-              Make Them Real.
-            </h1>
-
-            <p className="mb-8 max-w-xl text-lg leading-8 text-white/60">
-              Create a jar for any life goal — home, wedding, travel, education.
-              Add wish items, share with friends and family, and build toward what matters.
-            </p>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <a
-                href="/signup"
-                className="rounded-full bg-violet-600 px-7 py-3 text-center font-semibold text-white hover:bg-violet-500"
-              >
-                Create Your First Jar
-              </a>
-
-              <a
-                href="/login"
-                className="rounded-full border border-white/20 px-7 py-3 text-center font-semibold text-white/80 hover:bg-white/10"
-              >
-                Login
-              </a>
-            </div>
-          </div>
-
-          {/* Preview card */}
-          <div className="rounded-3xl border border-white/10 bg-white/10 p-6 backdrop-blur">
-            <div className="mb-4 rounded-2xl bg-white p-5 shadow-lg">
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-lg font-bold">New Home Jar</h2>
-                <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
-                  Active
-                </span>
-              </div>
-              <p className="mb-4 text-sm text-gray-500">
-                Sofa, kitchen essentials, and moving support.
+      {/* Hero */}
+      <div className="border-b border-gray-200 bg-white">
+        <div className="mx-auto max-w-5xl px-4 py-14">
+          <div className="grid items-center gap-12 md:grid-cols-2">
+            <div>
+              <h1 className="mb-4 text-3xl font-bold leading-snug text-gray-900">
+                Your wishes, collected.<br />Your community, connected.
+              </h1>
+              <p className="mb-6 text-sm leading-6 text-gray-600">
+                WishJar lets you build a wishlist for any life goal — a new home,
+                a wedding, a baby, education, travel. Share it with people who care,
+                and let them support you when the time is right.
               </p>
-              <div className="mb-2 h-2 rounded-full bg-gray-200">
-                <div className="h-2 w-2/5 rounded-full bg-violet-600" />
+              <div className="flex items-center gap-3">
+                <a
+                  href="/signup"
+                  className="rounded bg-violet-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-800"
+                >
+                  Create your first jar
+                </a>
+                <a
+                  href="/login"
+                  className="rounded border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                >
+                  Sign in
+                </a>
               </div>
-              <p className="text-xs text-gray-400">$420 of $1,000 goal</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              {["Wedding", "Baby", "Travel", "Education"].map((cat) => (
-                <div key={cat} className="rounded-xl border border-white/10 bg-white/10 p-3">
-                  <p className="text-sm font-semibold text-white">{cat}</p>
-                  <p className="text-xs text-white/50">Wish jar</p>
+            {/* Preview card */}
+            <div className="rounded border border-gray-200 bg-white shadow-sm">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-gray-800">New Home Jar</span>
+                  <span className="rounded bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-800">New Home</span>
                 </div>
-              ))}
+              </div>
+              <div className="divide-y divide-gray-100">
+                {[
+                  { name: "Sofa", price: "$420" },
+                  { name: "Coffee machine", price: "$180" },
+                  { name: "Kitchen set", price: "$650" },
+                ].map((item) => (
+                  <div key={item.name} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                    <span className="text-gray-700">{item.name}</span>
+                    <span className="font-semibold text-gray-900">{item.price}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-gray-200 px-4 py-3">
+                <div className="mb-1.5 h-2 rounded-full bg-gray-200">
+                  <div className="h-2 w-2/5 rounded-full bg-violet-600" />
+                </div>
+                <p className="text-xs text-gray-500">$1,250 planned of $3,000 goal</p>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Footer */}
-        <footer className="border-t border-white/10 pt-4 text-xs text-white/30">
-          WishJar · Made by slckkvrk ·{" "}
-          <a href="/privacy" className="underline hover:text-white/60">Privacy Policy</a>
-          {" · "}
-          <a href="/terms" className="underline hover:text-white/60">Terms of Service</a>
-        </footer>
+      {/* Categories */}
+      <div className="mx-auto max-w-5xl px-4 py-10">
+        <h2 className="mb-5 text-base font-semibold text-gray-700">Popular jar categories</h2>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+          {["New Home", "Wedding", "Baby", "Travel", "Education", "Birthday", "Gaming", "Startup", "Charity", "Other"].map((cat) => (
+            <div
+              key={cat}
+              className="rounded border border-gray-200 bg-white px-3 py-2.5 text-center text-sm text-gray-700 shadow-sm"
+            >
+              {cat}
+            </div>
+          ))}
+        </div>
+      </div>
 
-      </section>
-    </main>
+      {/* Footer */}
+      <footer className="border-t border-gray-200 bg-white">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 text-xs text-gray-400">
+          <span>© 2026 WishJar</span>
+          <div className="flex gap-4">
+            <a href="/privacy" className="hover:text-gray-600">Privacy Policy</a>
+            <a href="/terms" className="hover:text-gray-600">Terms of Service</a>
+            <a href="mailto:slckkvrk@gmail.com" className="hover:text-gray-600">Contact</a>
+          </div>
+        </div>
+      </footer>
+
+    </div>
   );
 }

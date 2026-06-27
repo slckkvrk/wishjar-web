@@ -4,29 +4,12 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { timeAgo } from "@/lib/time";
+import SiteHeader from "@/components/SiteHeader";
+import { sanitizeText } from "@/lib/validate";
 
-type Profile = {
-  id: string;
-  username: string;
-  bio: string | null;
-  created_at: string;
-};
-
-type Jar = {
-  id: string;
-  title: string;
-  description: string | null;
-  category: string;
-  goal_amount: number | null;
-};
-
-type Post = {
-  id: string;
-  content: string;
-  jar_id: string | null;
-  jar_title: string | null;
-  created_at: string;
-};
+type Profile = { id: string; username: string; bio: string | null; created_at: string; };
+type Jar = { id: string; title: string; description: string | null; category: string; goal_amount: number | null; };
+type Post = { id: string; content: string; jar_id: string | null; jar_title: string | null; created_at: string; };
 
 export default function ProfilePage() {
   const params = useParams();
@@ -37,92 +20,48 @@ export default function ProfilePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"posts" | "jars">("posts");
 
   const [postContent, setPostContent] = useState("");
-  const [postJarId, setPostJarId] = useState<string>("");
+  const [postJarId, setPostJarId] = useState("");
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState("");
 
   useEffect(() => {
     const load = async () => {
       const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
-        window.location.href = "/login";
-        return;
-      }
+      if (!userData.user) { window.location.href = "/login"; return; }
       setCurrentUserId(userData.user.id);
 
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id, username, bio, created_at")
-        .eq("username", username)
-        .single();
-
-      if (!profileData) {
-        setLoading(false);
-        return;
-      }
+      const { data: profileData } = await supabase.from("profiles").select("id, username, bio, created_at").eq("username", username).single();
+      if (!profileData) { setLoading(false); return; }
       setProfile(profileData);
 
       const [{ data: jarsData }, { data: rawPosts }] = await Promise.all([
-        supabase
-          .from("jars")
-          .select("id, title, description, category, goal_amount")
-          .eq("user_id", profileData.id)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("posts")
-          .select("id, content, jar_id, created_at")
-          .eq("user_id", profileData.id)
-          .order("created_at", { ascending: false }),
+        supabase.from("jars").select("id, title, description, category, goal_amount").eq("user_id", profileData.id).order("created_at", { ascending: false }),
+        supabase.from("posts").select("id, content, jar_id, created_at").eq("user_id", profileData.id).order("created_at", { ascending: false }),
       ]);
 
       setJars(jarsData ?? []);
-
       const jarMap = Object.fromEntries((jarsData ?? []).map((j) => [j.id, j.title]));
-      const mergedPosts: Post[] = (rawPosts ?? []).map((p) => ({
-        ...p,
-        jar_title: p.jar_id ? (jarMap[p.jar_id] ?? null) : null,
-      }));
-      setPosts(mergedPosts);
+      setPosts((rawPosts ?? []).map((p) => ({ ...p, jar_title: p.jar_id ? (jarMap[p.jar_id] ?? null) : null })));
       setLoading(false);
     };
-
     load();
   }, [username]);
 
   const handlePost = async () => {
-    if (!postContent.trim()) return;
+    const content = sanitizeText(postContent, 500);
+    if (!content) return;
     setPosting(true);
     setPostError("");
-
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) return;
-
-    const { data: inserted, error } = await supabase
-      .from("posts")
-      .insert({
-        user_id: userData.user.id,
-        content: postContent.trim(),
-        jar_id: postJarId || null,
-      })
-      .select("id, content, jar_id, created_at")
-      .single();
-
+    const { data: inserted, error } = await supabase.from("posts").insert({ user_id: userData.user.id, content, jar_id: postJarId || null }).select("id, content, jar_id, created_at").single();
     setPosting(false);
-
-    if (error) {
-      setPostError(error.message);
-      return;
-    }
-
+    if (error) { setPostError(error.message); return; }
     const jarMap = Object.fromEntries(jars.map((j) => [j.id, j.title]));
-    const newPost: Post = {
-      ...inserted,
-      jar_title: inserted.jar_id ? (jarMap[inserted.jar_id] ?? null) : null,
-    };
-
-    setPosts((prev) => [newPost, ...prev]);
+    setPosts((prev) => [{ ...inserted, jar_title: inserted.jar_id ? (jarMap[inserted.jar_id] ?? null) : null }, ...prev]);
     setPostContent("");
     setPostJarId("");
   };
@@ -135,213 +74,192 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-950 p-10 text-white">
-        <p>Loading profile...</p>
-      </main>
+      <div className="min-h-screen bg-[#f0eeea]">
+        <SiteHeader />
+        <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-gray-500">Loading…</div>
+      </div>
     );
   }
 
   if (!profile) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-white px-6 py-10">
-        <div className="mx-auto max-w-2xl text-white">
-          <a href="/dashboard" className="mb-8 inline-block text-sm text-white/50">← Home</a>
-          <h1 className="text-3xl font-bold">User not found</h1>
-          <p className="mt-2 text-white/50">@{username} does not exist.</p>
+      <div className="min-h-screen bg-[#f0eeea]">
+        <SiteHeader />
+        <div className="mx-auto max-w-5xl px-4 py-8">
+          <p className="text-sm text-gray-600">User <strong>@{username}</strong> not found.</p>
+          <a href="/dashboard" className="mt-2 inline-block text-sm text-violet-700 hover:underline">← Home</a>
         </div>
-      </main>
+      </div>
     );
   }
 
-  const isOwnProfile = currentUserId === profile.id;
+  const isOwn = currentUserId === profile.id;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-white px-6 py-8 text-black">
-      <div className="mx-auto max-w-2xl">
+    <div className="min-h-screen bg-[#f0eeea]">
+      <SiteHeader activeTab="profile" />
 
-        {/* Header */}
-        <header className="mb-8 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3">
-            <svg viewBox="0 0 64 64" className="h-10 w-10" aria-hidden="true">
-              <defs>
-                <linearGradient id="jgpr" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#9B6CFF" />
-                  <stop offset="100%" stopColor="#4F32C8" />
-                </linearGradient>
-              </defs>
-              <rect x="18" y="6" width="28" height="8" rx="3" fill="#9B6CFF" />
-              <rect x="12" y="16" width="40" height="42" rx="10" fill="url(#jgpr)" />
-              <path d="M32 24.5L35.2 31L42.3 32L37.1 37L38.4 44L32 40.6L25.6 44L26.9 37L21.7 32L28.8 31L32 24.5Z" fill="white" />
-            </svg>
-            <span className="text-2xl font-extrabold text-violet-200">WishJar</span>
-          </a>
-          <div className="flex items-center gap-3">
-            <a
-              href="/feed"
-              className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur hover:bg-white/20"
-            >
-              Feed
-            </a>
-            <a
-              href="/dashboard"
-              className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur"
-            >
-              Home
-            </a>
-          </div>
-        </header>
+      <div className="mx-auto max-w-5xl px-4 py-6">
+        <p className="mb-4 text-xs text-gray-400">
+          <a href="/feed" className="hover:underline">Feed</a>
+          {" / "}@{profile.username}
+        </p>
 
-        {/* Profile card */}
-        <section className="mb-6 rounded-3xl border border-white/10 bg-white/10 p-8 text-white shadow-2xl backdrop-blur">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-violet-600 text-2xl font-bold">
-                {profile.username[0].toUpperCase()}
-              </div>
-              <h1 className="text-3xl font-bold">@{profile.username}</h1>
-              {profile.bio && (
-                <p className="mt-2 max-w-lg text-white/70">{profile.bio}</p>
-              )}
-              <p className="mt-3 text-xs text-white/30">
-                {jars.length} jar{jars.length !== 1 ? "s" : ""} · {posts.length} post{posts.length !== 1 ? "s" : ""}
-              </p>
-            </div>
-            {isOwnProfile && (
-              <a
-                href="/settings/profile"
-                className="shrink-0 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
-              >
-                Edit Profile
-              </a>
-            )}
-          </div>
-        </section>
+        <div className="grid gap-5 md:grid-cols-[1fr_260px]">
+          <div className="space-y-4">
 
-        {/* Write a post — only own profile */}
-        {isOwnProfile && (
-          <section className="mb-6 rounded-3xl bg-white p-6 shadow-xl">
-            <h2 className="mb-4 text-lg font-bold">Share a post</h2>
-            <textarea
-              value={postContent}
-              onChange={(e) => setPostContent(e.target.value)}
-              placeholder="Tell your community why your jar matters..."
-              rows={3}
-              maxLength={500}
-              className="w-full rounded-2xl border border-black/10 px-4 py-3 text-sm outline-none focus:border-violet-500"
-            />
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <select
-                value={postJarId}
-                onChange={(e) => setPostJarId(e.target.value)}
-                className="flex-1 rounded-2xl border border-black/10 px-4 py-2 text-sm outline-none focus:border-violet-500"
-              >
-                <option value="">Link a jar (optional)</option>
-                {jars.map((jar) => (
-                  <option key={jar.id} value={jar.id}>
-                    🫙 {jar.title}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={handlePost}
-                disabled={posting || !postContent.trim()}
-                className="shrink-0 rounded-full bg-violet-700 px-6 py-2 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                {posting ? "Posting..." : "Post"}
-              </button>
-            </div>
-            {postError && (
-              <p className="mt-3 text-sm text-red-600">{postError}</p>
-            )}
-          </section>
-        )}
-
-        {/* Jars */}
-        {jars.length > 0 && (
-          <section className="mb-6 rounded-3xl bg-white p-6 shadow-xl">
-            <h2 className="mb-4 text-lg font-bold">
-              {isOwnProfile ? "Your Jars" : "Jars"}
-            </h2>
-            <div className="space-y-3">
-              {jars.map((jar) => (
-                <a
-                  key={jar.id}
-                  href={`/jars/${jar.id}`}
-                  className="flex items-center justify-between rounded-2xl border border-black/10 bg-gray-50 p-4 hover:bg-violet-50"
-                >
+            {/* Profile card */}
+            <div className="rounded border border-gray-200 bg-white shadow-sm">
+              <div className="flex items-center justify-between px-4 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-violet-600 text-lg font-bold text-white">
+                    {profile.username[0].toUpperCase()}
+                  </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold">{jar.title}</span>
-                      <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700">
-                        {jar.category}
-                      </span>
-                    </div>
-                    {jar.description && (
-                      <p className="mt-0.5 text-xs text-gray-500 line-clamp-1">{jar.description}</p>
-                    )}
+                    <h1 className="text-base font-bold text-gray-900">@{profile.username}</h1>
+                    {profile.bio && <p className="mt-0.5 text-sm text-gray-500">{profile.bio}</p>}
+                    <p className="mt-1 text-xs text-gray-400">
+                      {jars.length} jar{jars.length !== 1 ? "s" : ""} · {posts.length} post{posts.length !== 1 ? "s" : ""}
+                    </p>
                   </div>
-                  {jar.goal_amount && (
-                    <span className="shrink-0 text-sm font-bold text-violet-700">
-                      ${jar.goal_amount.toLocaleString()}
-                    </span>
-                  )}
-                </a>
-              ))}
+                </div>
+                {isOwn && (
+                  <a href="/settings/profile" className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+                    Edit profile
+                  </a>
+                )}
+              </div>
             </div>
-          </section>
-        )}
 
-        {/* Posts */}
-        <section>
-          {posts.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-gray-200 p-10 text-center text-gray-400">
-              <p>{isOwnProfile ? "You haven't posted anything yet." : "No posts yet."}</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {posts.map((post) => (
-                <article
-                  key={post.id}
-                  className="rounded-3xl border border-black/10 bg-white p-6 shadow-sm"
-                >
-                  <div className="mb-3 flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-600 text-sm font-bold text-white">
-                        {profile.username[0].toUpperCase()}
-                      </div>
-                      <div>
-                        <span className="font-bold">@{profile.username}</span>
-                        <p className="text-xs text-gray-400">{timeAgo(post.created_at)}</p>
-                      </div>
-                    </div>
-                    {isOwnProfile && (
-                      <button
-                        onClick={() => handleDeletePost(post.id)}
-                        className="text-xs text-gray-300 hover:text-red-500"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-
-                  <p className="mb-3 leading-7 text-gray-800">{post.content}</p>
-
-                  {post.jar_title && post.jar_id && (
-                    <a
-                      href={`/jars/${post.jar_id}`}
-                      className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-1.5 text-sm font-semibold text-violet-700 hover:bg-violet-100"
+            {/* Write post */}
+            {isOwn && (
+              <div className="rounded border border-gray-200 bg-white shadow-sm">
+                <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">New Post</span>
+                </div>
+                <div className="px-4 py-4 space-y-3">
+                  <textarea
+                    value={postContent}
+                    onChange={(e) => setPostContent(e.target.value)}
+                    placeholder="Tell your community why your jar matters…"
+                    rows={3}
+                    maxLength={500}
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
+                  />
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={postJarId}
+                      onChange={(e) => setPostJarId(e.target.value)}
+                      className="flex-1 rounded border border-gray-300 px-3 py-1.5 text-xs outline-none focus:border-violet-500"
                     >
-                      <span>🫙</span>
-                      {post.jar_title}
-                    </a>
-                  )}
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+                      <option value="">Link a jar (optional)</option>
+                      {jars.map((j) => <option key={j.id} value={j.id}>🫙 {j.title}</option>)}
+                    </select>
+                    <button
+                      onClick={handlePost}
+                      disabled={posting || !postContent.trim()}
+                      className="rounded bg-violet-700 px-4 py-1.5 text-xs font-semibold text-white hover:bg-violet-800 disabled:opacity-50"
+                    >
+                      {posting ? "Posting…" : "Post"}
+                    </button>
+                  </div>
+                  {postError && <p className="text-xs text-red-600">{postError}</p>}
+                </div>
+              </div>
+            )}
 
+            {/* Tabs */}
+            <div className="rounded border border-gray-200 bg-white shadow-sm">
+              <div className="flex border-b border-gray-200">
+                {(["posts", "jars"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-5 py-3 text-sm font-semibold capitalize transition-colors ${
+                      activeTab === tab
+                        ? "border-b-2 border-violet-700 text-violet-700"
+                        : "text-gray-500 hover:text-gray-800"
+                    }`}
+                  >
+                    {tab} ({tab === "posts" ? posts.length : jars.length})
+                  </button>
+                ))}
+              </div>
+
+              {/* Posts tab */}
+              {activeTab === "posts" && (
+                posts.length === 0 ? (
+                  <div className="px-4 py-8 text-center text-sm text-gray-400">
+                    {isOwn ? "You haven't posted yet." : "No posts yet."}
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-gray-100">
+                    {posts.map((post) => (
+                      <li key={post.id} className="px-4 py-4">
+                        <div className="mb-1.5 flex items-center justify-between">
+                          <span className="text-xs text-gray-400">{timeAgo(post.created_at)}</span>
+                          {isOwn && (
+                            <button onClick={() => handleDeletePost(post.id)} className="text-xs text-gray-300 hover:text-red-500">
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-sm leading-6 text-gray-800">{post.content}</p>
+                        {post.jar_title && post.jar_id && (
+                          <div className="mt-2">
+                            <a href={`/jars/${post.jar_id}`} className="inline-block rounded border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 hover:bg-violet-100">
+                              🫙 {post.jar_title}
+                            </a>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )
+              )}
+
+              {/* Jars tab */}
+              {activeTab === "jars" && (
+                jars.length === 0 ? (
+                  <div className="px-4 py-8 text-center text-sm text-gray-400">
+                    {isOwn ? <><p>No jars yet.</p><a href="/jars/new" className="mt-2 inline-block text-violet-700 hover:underline">Create your first jar</a></> : "No jars yet."}
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-gray-100">
+                    {jars.map((jar) => (
+                      <li key={jar.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
+                        <div className="min-w-0 flex-1 pr-3">
+                          <div className="flex items-center gap-2">
+                            <a href={`/jars/${jar.id}`} className="text-sm font-semibold text-violet-700 hover:underline">{jar.title}</a>
+                            <span className="rounded bg-violet-50 px-1.5 py-0.5 text-xs text-violet-700">{jar.category}</span>
+                          </div>
+                          {jar.description && <p className="mt-0.5 truncate text-xs text-gray-500">{jar.description}</p>}
+                        </div>
+                        {jar.goal_amount && <span className="shrink-0 text-xs font-semibold text-gray-600">${jar.goal_amount.toLocaleString()}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )
+              )}
+            </div>
+
+          </div>
+
+          {/* Sidebar */}
+          <div>
+            <div className="rounded border border-gray-200 bg-white shadow-sm">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">About</span>
+              </div>
+              <div className="px-4 py-3 text-xs text-gray-500 space-y-1.5">
+                <p><span className="text-gray-400">Username: </span><strong className="text-gray-700">@{profile.username}</strong></p>
+                <p><span className="text-gray-400">Joined: </span>{new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p>
+                {isOwn && <p className="pt-1"><a href="/settings/profile" className="text-violet-700 hover:underline">Edit profile settings</a></p>}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

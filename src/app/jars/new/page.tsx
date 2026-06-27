@@ -2,19 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import SiteHeader from "@/components/SiteHeader";
+import { sanitizeText } from "@/lib/validate";
 
-const categories = [
-  "New Home",
-  "Wedding",
-  "Baby",
-  "Birthday",
-  "Travel",
-  "Education",
-  "Gaming",
-  "Startup",
-  "Charity",
-  "Other",
-];
+const categories = ["New Home","Wedding","Baby","Birthday","Travel","Education","Gaming","Startup","Charity","Other"];
 
 export default function NewJarPage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -26,170 +17,120 @@ export default function NewJarPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
-
-      if (!data.user) {
-        window.location.href = "/login";
-        return;
-      }
-
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) { window.location.href = "/login"; return; }
       setUserId(data.user.id);
-    };
-
-    getUser();
+    });
   }, []);
 
-  const handleCreateJar = async () => {
-    if (!userId) {
-      setMessage("You must be logged in.");
-      return;
-    }
-
-    if (!title.trim()) {
-      setMessage("Jar title is required.");
-      return;
-    }
-
+  const handleCreate = async () => {
+    if (!userId) { setMessage("You must be logged in."); return; }
+    if (!title.trim()) { setMessage("Jar name is required."); return; }
     setSaving(true);
     setMessage("");
-
     const { error } = await supabase.from("jars").insert({
       user_id: userId,
-      title: title.trim(),
+      title: sanitizeText(title, 200),
       category,
       goal_amount: goalAmount ? Number(goalAmount) : null,
-      description: description.trim() || null,
+      description: sanitizeText(description, 1000) || null,
     });
-
     setSaving(false);
-
-    if (error) {
-      setMessage(error.message);
-      return;
-    }
-
+    if (error) { setMessage(error.message); return; }
     window.location.href = "/dashboard";
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-white px-6 py-8 text-black">
-      <div className="mx-auto max-w-xl">
+    <div className="min-h-screen bg-[#f0eeea]">
+      <SiteHeader activeTab="home" />
 
-        {/* Header */}
-        <header className="mb-8 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3">
-            <svg viewBox="0 0 64 64" className="h-10 w-10 drop-shadow-sm" aria-hidden="true">
-              <defs>
-                <linearGradient id="jarGradientNew" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#9B6CFF" />
-                  <stop offset="100%" stopColor="#4F32C8" />
-                </linearGradient>
-              </defs>
-              <rect x="18" y="6" width="28" height="8" rx="3" fill="#9B6CFF" />
-              <rect x="12" y="16" width="40" height="42" rx="10" fill="url(#jarGradientNew)" />
-              <path
-                d="M32 24.5L35.2 31L42.3 32L37.1 37L38.4 44L32 40.6L25.6 44L26.9 37L21.7 32L28.8 31L32 24.5Z"
-                fill="white"
-              />
-            </svg>
-            <span className="text-2xl font-extrabold tracking-tight text-violet-200">WishJar</span>
-          </a>
+      <div className="mx-auto max-w-xl px-4 py-6">
+        <p className="mb-4 text-xs text-gray-400">
+          <a href="/dashboard" className="hover:underline">Home</a> / New Jar
+        </p>
 
-          <a
-            href="/dashboard"
-            className="rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-semibold text-white backdrop-blur"
-          >
-            ← Home
-          </a>
-        </header>
+        <div className="rounded border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+            <h1 className="text-sm font-bold text-gray-800">Create a new jar</h1>
+            <p className="mt-0.5 text-xs text-gray-500">Give your jar a name and set a goal.</p>
+          </div>
 
-        {/* Form card */}
-        <section className="rounded-3xl border border-black/10 bg-white p-8 shadow-xl">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-violet-600">
-            New Jar
-          </p>
-          <h1 className="mb-2 text-3xl font-extrabold">Create a Jar</h1>
-          <p className="mb-8 text-sm text-gray-500">
-            Give your jar a clear goal. You can always edit the details later.
-          </p>
-
-          <div className="space-y-5">
+          <div className="px-4 py-5 space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-semibold">
+              <label className="mb-1 block text-xs font-semibold text-gray-700">
                 Jar name <span className="text-red-500">*</span>
               </label>
               <input
-                className="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-violet-500"
-                placeholder="e.g. New Apartment"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. New Apartment"
+                maxLength={200}
+                className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold">Category</label>
+              <label className="mb-1 block text-xs font-semibold text-gray-700">Category</label>
               <select
-                className="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-violet-500"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
+                className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
               >
-                {categories.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
+                {categories.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold">
-                Goal amount{" "}
-                <span className="font-normal text-gray-400">(optional)</span>
+              <label className="mb-1 block text-xs font-semibold text-gray-700">
+                Goal amount <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">$</span>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full rounded-2xl border border-black/10 pl-8 pr-4 py-3 outline-none focus:border-violet-500"
-                  placeholder="1000"
                   value={goalAmount}
                   onChange={(e) => setGoalAmount(e.target.value)}
+                  placeholder="1000"
+                  className="w-full rounded border border-gray-300 pl-7 pr-3 py-2 text-sm outline-none focus:border-violet-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold">
-                Description{" "}
-                <span className="font-normal text-gray-400">(optional)</span>
+              <label className="mb-1 block text-xs font-semibold text-gray-700">
+                Description <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               <textarea
-                className="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-violet-500"
-                rows={4}
-                placeholder="Tell people what this jar is for."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                placeholder="Tell people what this jar is for."
+                rows={4}
+                maxLength={1000}
+                className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
               />
             </div>
 
             {message && (
-              <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">{message}</p>
+              <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{message}</p>
             )}
 
-            <button
-              onClick={handleCreateJar}
-              disabled={saving}
-              className="w-full rounded-full bg-violet-700 py-4 font-semibold text-white disabled:opacity-60"
-            >
-              {saving ? "Creating..." : "Create Jar"}
-            </button>
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                onClick={handleCreate}
+                disabled={saving}
+                className="rounded bg-violet-700 px-5 py-2 text-sm font-semibold text-white hover:bg-violet-800 disabled:opacity-60"
+              >
+                {saving ? "Creating…" : "Create Jar"}
+              </button>
+              <a href="/dashboard" className="text-sm text-gray-500 hover:text-gray-800">
+                Cancel
+              </a>
+            </div>
           </div>
-        </section>
-
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

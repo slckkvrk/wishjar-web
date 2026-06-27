@@ -9,7 +9,6 @@ export default function SignUpPage() {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [success, setSuccess] = useState(false);
 
   const handleSignUp = async () => {
     if (!email || !password) {
@@ -21,150 +20,114 @@ export default function SignUpPage() {
       return;
     }
     if (!agreed) {
-      setMessage("Please accept the Terms of Service and Privacy Policy to continue.");
+      setMessage("Please accept the Terms and Privacy Policy to continue.");
       return;
     }
-
     setLoading(true);
     setMessage("");
-
     const { error } = await supabase.auth.signUp({ email, password });
-
     setLoading(false);
-
     if (error) {
       setMessage(error.message);
       return;
     }
-
-    setSuccess(true);
     window.location.href = "/setup/username";
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") handleSignUp();
-  };
-
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 px-6">
-      <div className="w-full max-w-md">
-
-        {/* Logo */}
-        <div className="mb-8 flex flex-col items-center">
-          <svg viewBox="0 0 64 64" className="mb-4 h-14 w-14 drop-shadow-lg" aria-hidden="true">
-            <defs>
-              <linearGradient id="jarGradientSignup" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#9B6CFF" />
-                <stop offset="100%" stopColor="#4F32C8" />
-              </linearGradient>
-            </defs>
-            <rect x="18" y="6" width="28" height="8" rx="3" fill="#9B6CFF" />
-            <rect x="12" y="16" width="40" height="42" rx="10" fill="url(#jarGradientSignup)" />
-            <path
-              d="M32 24.5L35.2 31L42.3 32L37.1 37L38.4 44L32 40.6L25.6 44L26.9 37L21.7 32L28.8 31L32 24.5Z"
-              fill="white"
-            />
-          </svg>
-          <span className="text-3xl font-extrabold tracking-tight text-violet-200">WishJar</span>
-          <p className="mt-2 text-sm text-white/50">Create your account</p>
-        </div>
-
-        {/* Card */}
-        <div className="rounded-3xl border border-white/10 bg-white/10 p-8 shadow-2xl backdrop-blur">
-          {success ? (
-            <div className="text-center">
-              <p className="mb-2 text-lg font-bold text-white">You&apos;re in!</p>
-              <p className="text-sm text-white/60">Redirecting to your home...</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white/80">Email</label>
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder-white/30 outline-none focus:border-violet-400 focus:bg-white/15"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value.trim())}
-                  onKeyDown={handleKeyDown}
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white/80">Password</label>
-                <input
-                  type="password"
-                  placeholder="At least 8 characters"
-                  autoComplete="new-password"
-                  className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder-white/30 outline-none focus:border-violet-400 focus:bg-white/15"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                />
-              </div>
-
-              {/* KVKK / GDPR consent checkbox */}
-              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4">
-                <input
-                  type="checkbox"
-                  checked={agreed}
-                  onChange={(e) => setAgreed(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-violet-500"
-                />
-                <span className="text-xs leading-5 text-white/60">
-                  I am at least 13 years old and I agree to WishJar&apos;s{" "}
-                  <a
-                    href="/terms"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-semibold text-violet-300 underline"
-                  >
-                    Terms of Service
-                  </a>{" "}
-                  and{" "}
-                  <a
-                    href="/privacy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-semibold text-violet-300 underline"
-                  >
-                    Privacy Policy
-                  </a>
-                  {" "}(including cross-border data transfer to the US via Supabase).
-                </span>
-              </label>
-
-              {message && (
-                <p className="rounded-xl bg-red-500/20 px-4 py-3 text-sm text-red-300">{message}</p>
-              )}
-
-              <button
-                onClick={handleSignUp}
-                disabled={loading || !agreed}
-                className="w-full rounded-full bg-violet-600 py-4 font-semibold text-white hover:bg-violet-500 disabled:opacity-50"
-              >
-                {loading ? "Creating account..." : "Create Account"}
-              </button>
-            </div>
-          )}
-
-          {!success && (
-            <p className="mt-6 text-center text-sm text-white/50">
-              Already have an account?{" "}
-              <a href="/login" className="font-semibold text-violet-300 hover:text-violet-200">
-                Login
-              </a>
-            </p>
-          )}
-        </div>
-
-        <p className="mt-6 text-center">
-          <a href="/" className="text-sm text-white/30 hover:text-white/60">
-            ← Back to WishJar
+    <div className="min-h-screen bg-[#f0eeea]">
+      <header className="border-b border-[#1e0d5c] bg-[#2c1875]">
+        <div className="mx-auto flex h-10 max-w-5xl items-center px-4">
+          <a href="/" className="flex items-center gap-1.5">
+            <svg viewBox="0 0 64 64" className="h-5 w-5" aria-hidden="true">
+              <rect x="18" y="6" width="28" height="8" rx="2" fill="#a78bfa" />
+              <rect x="12" y="16" width="40" height="42" rx="6" fill="#7c3aed" />
+              <path d="M32 24L34.5 29.5L41 30.5L36.5 35L37.8 42L32 38.5L26.2 42L27.5 35L23 30.5L29.5 29.5Z" fill="white" />
+            </svg>
+            <span className="text-sm font-bold text-white">WishJar</span>
           </a>
-        </p>
+        </div>
+      </header>
+
+      <div className="mx-auto mt-16 max-w-sm px-4">
+        <div className="rounded border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-200 px-5 py-4">
+            <h1 className="text-base font-bold text-gray-900">Create your WishJar account</h1>
+            <p className="mt-0.5 text-xs text-gray-500">It&apos;s free. No credit card required.</p>
+          </div>
+
+          <div className="px-5 py-5 space-y-4">
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-gray-700">
+                Email address
+              </label>
+              <input
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value.trim())}
+                className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-gray-700">
+                Password
+              </label>
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
+                placeholder="At least 8 characters"
+              />
+            </div>
+
+            <label className="flex cursor-pointer items-start gap-2.5">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-violet-600"
+              />
+              <span className="text-xs leading-5 text-gray-600">
+                I am at least 13 years old and I agree to WishJar&apos;s{" "}
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-violet-700 underline">
+                  Terms of Service
+                </a>{" "}
+                and{" "}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-violet-700 underline">
+                  Privacy Policy
+                </a>
+                , including transfer of data to Supabase (US).
+              </span>
+            </label>
+
+            {message && (
+              <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                {message}
+              </p>
+            )}
+
+            <button
+              onClick={handleSignUp}
+              disabled={loading || !agreed}
+              className="w-full rounded bg-violet-700 py-2 text-sm font-semibold text-white hover:bg-violet-800 disabled:opacity-50"
+            >
+              {loading ? "Creating account…" : "Create account"}
+            </button>
+          </div>
+
+          <div className="border-t border-gray-100 bg-gray-50 px-5 py-3 text-xs text-gray-500">
+            Already have an account?{" "}
+            <a href="/login" className="font-semibold text-violet-700 hover:underline">
+              Sign in
+            </a>
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

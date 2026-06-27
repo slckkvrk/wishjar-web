@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import SiteHeader from "@/components/SiteHeader";
 
 type Jar = {
   id: string;
@@ -9,6 +10,7 @@ type Jar = {
   description: string | null;
   category: string;
   goal_amount: number | null;
+  status: string;
   created_at: string;
 };
 
@@ -21,197 +23,200 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadDashboard = async () => {
+    const load = async () => {
       const { data: userData } = await supabase.auth.getUser();
-
       if (!userData.user) {
         window.location.href = "/login";
         return;
       }
-
       setEmail(userData.user.email ?? null);
 
-      const { data: profileData } = await supabase
+      const { data: profile } = await supabase
         .from("profiles")
         .select("username")
         .eq("id", userData.user.id)
         .single();
-
-      setUsername(profileData?.username ?? null);
+      setUsername(profile?.username ?? null);
 
       const { data: jarsData, error } = await supabase
         .from("jars")
-        .select("id, title, description, category, goal_amount, created_at")
+        .select("id, title, description, category, goal_amount, status, created_at")
+        .eq("user_id", userData.user.id)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error(error.message);
-      }
-
+      if (error) console.error(error.message);
       setJars(jarsData ?? []);
       setLoading(false);
     };
-
-    loadDashboard();
+    load();
   }, []);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/";
-  };
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-950 p-10 text-white">
-        <p>Loading WishJar...</p>
-      </main>
+      <div className="min-h-screen bg-[#f0eeea]">
+        <SiteHeader activeTab="home" />
+        <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-gray-500">Loading…</div>
+      </div>
     );
   }
 
-  const atJarLimit = jars.length >= MAX_JARS;
+  const activeJars = jars.filter((j) => j.status !== "completed");
+  const atLimit = activeJars.length >= MAX_JARS;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-white text-black">
-      <div className="mx-auto max-w-6xl px-6 py-8">
+    <div className="min-h-screen bg-[#f0eeea]">
+      <SiteHeader activeTab="home" />
 
-        {/* Header */}
-        <header className="mb-10 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3">
-            <svg viewBox="0 0 64 64" className="h-10 w-10 drop-shadow-sm" aria-hidden="true">
-              <defs>
-                <linearGradient id="jarGradientDash" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#9B6CFF" />
-                  <stop offset="100%" stopColor="#4F32C8" />
-                </linearGradient>
-              </defs>
-              <rect x="18" y="6" width="28" height="8" rx="3" fill="#9B6CFF" />
-              <rect x="12" y="16" width="40" height="42" rx="10" fill="url(#jarGradientDash)" />
-              <path
-                d="M32 24.5L35.2 31L42.3 32L37.1 37L38.4 44L32 40.6L25.6 44L26.9 37L21.7 32L28.8 31L32 24.5Z"
-                fill="white"
-              />
-            </svg>
-            <span className="text-2xl font-extrabold tracking-tight text-violet-200">WishJar</span>
-          </a>
+      <div className="mx-auto max-w-5xl px-4 py-6">
 
-          <div className="flex items-center gap-3">
-            <a
-              href="/feed"
-              className="rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-semibold text-white backdrop-blur hover:bg-white/20"
-            >
-              Feed
-            </a>
-            {username && (
-              <a
-                href={`/u/${username}`}
-                className="rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-semibold text-white backdrop-blur hover:bg-white/20"
-              >
-                @{username}
-              </a>
-            )}
-            <button
-              onClick={handleLogout}
-              className="rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-semibold text-white backdrop-blur"
-            >
-              Logout
-            </button>
-          </div>
-        </header>
+        {/* Breadcrumb */}
+        <p className="mb-4 text-xs text-gray-400">Home</p>
 
-        {/* Welcome banner */}
-        <section className="mb-8 rounded-3xl border border-white/10 bg-white/10 p-8 text-white shadow-2xl backdrop-blur">
-          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-violet-300">
-                Home
-              </p>
-              <h1 className="mb-2 text-4xl font-bold md:text-5xl">Welcome back.</h1>
-              <p className="text-sm text-white/60">{email}</p>
-            </div>
+        <div className="grid gap-5 md:grid-cols-[1fr_260px]">
 
-            {atJarLimit ? (
-              <div className="rounded-2xl border border-white/20 bg-white/10 px-6 py-3 text-center text-sm text-white/70">
-                You have {jars.length} active jars. <br />
-                <span className="font-semibold text-violet-300">Complete one to create a new jar.</span>
-              </div>
-            ) : (
-              <a
-                href="/jars/new"
-                className="rounded-full bg-white px-6 py-3 text-center font-bold text-slate-950"
-              >
-                + Create New Jar
-              </a>
-            )}
-          </div>
-        </section>
-
-        {/* Jars list */}
-        <section className="rounded-3xl bg-white p-6 shadow-xl">
-          <div className="mb-6 flex flex-col justify-between gap-3 border-b pb-5 md:flex-row md:items-center">
-            <div>
-              <h2 className="text-2xl font-bold">Your Jars</h2>
-              <p className="mt-1 text-sm text-gray-500">
-                {jars.length === 0
-                  ? "No jars yet. Create your first one."
-                  : "Tap a jar to see and manage its wish items."}
-              </p>
-            </div>
-
-            <div className="rounded-full bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700">
-              {jars.length} / {MAX_JARS} active
-            </div>
-          </div>
-
-          {jars.length === 0 ? (
-            <div className="rounded-2xl border border-dashed p-10 text-center">
-              <p className="mb-5 text-gray-500">You have no jars yet.</p>
-              <a
-                href="/jars/new"
-                className="inline-block rounded-full bg-violet-700 px-6 py-3 font-semibold text-white"
-              >
-                Create Your First Jar
-              </a>
-            </div>
-          ) : (
-            <div className="grid gap-5 md:grid-cols-2">
-              {jars.map((jar) => (
-                <div
-                  key={jar.id}
-                  className="rounded-2xl border bg-gradient-to-br from-white to-violet-50 p-6 shadow-sm"
-                >
-                  <div className="mb-3 flex items-start justify-between gap-4">
-                    <h3 className="text-xl font-bold">{jar.title}</h3>
-                    <span className="shrink-0 rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
-                      {jar.category}
-                    </span>
-                  </div>
-
-                  {jar.description && (
-                    <p className="mb-4 text-sm leading-6 text-gray-600 line-clamp-2">
-                      {jar.description}
-                    </p>
-                  )}
-
-                  <div className="mb-4 flex items-center justify-between text-sm">
-                    <span className="text-gray-500">Goal</span>
-                    <span className="font-bold text-violet-700">
-                      {jar.goal_amount ? `$${jar.goal_amount.toLocaleString()}` : "No goal set"}
-                    </span>
-                  </div>
-
+          {/* Main: jar list */}
+          <div>
+            <div className="rounded border border-gray-200 bg-white shadow-sm">
+              <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-3">
+                <h1 className="text-sm font-bold text-gray-800">
+                  Your Jars
+                  <span className="ml-2 rounded bg-gray-200 px-1.5 py-0.5 text-xs font-normal text-gray-600">
+                    {activeJars.length}/{MAX_JARS} active
+                  </span>
+                </h1>
+                {atLimit ? (
+                  <span className="text-xs text-gray-400">Limit reached</span>
+                ) : (
                   <a
-                    href={`/jars/${jar.id}`}
-                    className="block w-full rounded-full border border-violet-200 bg-white py-2 text-center text-sm font-semibold text-violet-700 hover:bg-violet-50"
+                    href="/jars/new"
+                    className="rounded bg-violet-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-800"
                   >
-                    View Jar →
+                    + New jar
+                  </a>
+                )}
+              </div>
+
+              {jars.length === 0 ? (
+                <div className="px-4 py-10 text-center">
+                  <p className="mb-3 text-sm text-gray-500">You haven&apos;t created any jars yet.</p>
+                  <a
+                    href="/jars/new"
+                    className="rounded bg-violet-700 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-800"
+                  >
+                    Create your first jar
                   </a>
                 </div>
-              ))}
+              ) : (
+                <ul className="divide-y divide-gray-100">
+                  {jars.map((jar) => (
+                    <li key={jar.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
+                      <div className="flex-1 min-w-0 pr-4">
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={`/jars/${jar.id}`}
+                            className="text-sm font-semibold text-violet-700 hover:underline"
+                          >
+                            {jar.title}
+                          </a>
+                          <span className="rounded bg-violet-50 px-1.5 py-0.5 text-xs text-violet-700">
+                            {jar.category}
+                          </span>
+                          {jar.status === "completed" && (
+                            <span className="rounded bg-green-50 px-1.5 py-0.5 text-xs font-semibold text-green-700">
+                              Completed
+                            </span>
+                          )}
+                        </div>
+                        {jar.description && (
+                          <p className="mt-0.5 truncate text-xs text-gray-500">{jar.description}</p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-3">
+                        {jar.goal_amount && (
+                          <span className="text-xs text-gray-500">
+                            Goal: ${jar.goal_amount.toLocaleString()}
+                          </span>
+                        )}
+                        <a
+                          href={`/jars/${jar.id}`}
+                          className="rounded border border-gray-300 bg-white px-3 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                        >
+                          View
+                        </a>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          )}
-        </section>
 
+            {atLimit && (
+              <p className="mt-2 text-xs text-gray-400">
+                You have {activeJars.length} active jars (limit is {MAX_JARS}). Complete or delete a jar to create a new one.
+              </p>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-4">
+            {/* Account info */}
+            <div className="rounded border border-gray-200 bg-white shadow-sm">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Account</span>
+              </div>
+              <div className="px-4 py-3 text-xs text-gray-600 space-y-2">
+                {username && (
+                  <div>
+                    <span className="text-gray-400">Username: </span>
+                    <a href={`/u/${username}`} className="font-semibold text-violet-700 hover:underline">
+                      @{username}
+                    </a>
+                  </div>
+                )}
+                <div className="truncate">
+                  <span className="text-gray-400">Email: </span>
+                  <span>{email}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick links */}
+            <div className="rounded border border-gray-200 bg-white shadow-sm">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">Quick links</span>
+              </div>
+              <ul className="divide-y divide-gray-100">
+                {[
+                  { href: "/feed", label: "Community feed" },
+                  { href: "/jars/new", label: "Create new jar" },
+                  { href: username ? `/u/${username}` : "#", label: "My profile" },
+                  { href: "/settings/profile", label: "Settings" },
+                ].map((link) => (
+                  <li key={link.href}>
+                    <a
+                      href={link.href}
+                      className="block px-4 py-2.5 text-xs text-violet-700 hover:bg-gray-50 hover:underline"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+        </div>
       </div>
-    </main>
+
+      <footer className="mt-10 border-t border-gray-200 bg-white">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 text-xs text-gray-400">
+          <span>© 2026 WishJar</span>
+          <div className="flex gap-4">
+            <a href="/privacy" className="hover:text-gray-600">Privacy</a>
+            <a href="/terms" className="hover:text-gray-600">Terms</a>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }

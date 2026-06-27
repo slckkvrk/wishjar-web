@@ -3,33 +3,27 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import SiteHeader from "@/components/SiteHeader";
 import { isValidUrl, sanitizeText, isValidPrice } from "@/lib/validate";
 
 export default function NewWishPage() {
   const params = useParams();
   const router = useRouter();
-
   const jarId = params.id as string;
 
   const [title, setTitle] = useState("");
   const [productUrl, setProductUrl] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleCreateWish = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     setLoading(true);
     setErrorMessage("");
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
       setErrorMessage("You must be logged in to add a wish item.");
       setLoading(false);
@@ -57,117 +51,106 @@ export default function NewWishPage() {
       description: description ? sanitizeText(description, 1000) : null,
     });
 
-    if (error) {
-      setErrorMessage(error.message);
-      setLoading(false);
-      return;
-    }
-
+    if (error) { setErrorMessage(error.message); setLoading(false); return; }
     router.push(`/jars/${jarId}`);
   };
 
   return (
-    <main className="min-h-screen bg-[#f7f3ff] px-6 py-8 text-black">
-      <div className="mx-auto max-w-2xl">
-        <header className="mb-8 flex items-center justify-between">
-          <a
-            href={`/jars/${jarId}`}
-            className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold"
-          >
-            ← Back to Jar
-          </a>
+    <div className="min-h-screen bg-[#f0eeea]">
+      <SiteHeader activeTab="home" />
 
-          <a
-            href="/dashboard"
-            className="rounded-full bg-black px-4 py-2 text-sm font-semibold text-white"
-          >
-            Home
-          </a>
-        </header>
+      <div className="mx-auto max-w-xl px-4 py-6">
+        <p className="mb-4 text-xs text-gray-400">
+          <a href="/dashboard" className="hover:underline">Home</a>
+          {" / "}
+          <a href={`/jars/${jarId}`} className="hover:underline">Jar</a>
+          {" / Add item"}
+        </p>
 
-        <section className="rounded-3xl border border-black/10 bg-white p-8 shadow-xl">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-violet-600">
-            New Wish Item
-          </p>
+        <div className="rounded border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+            <h1 className="text-sm font-bold text-gray-800">Add a wish item</h1>
+            <p className="mt-0.5 text-xs text-gray-500">Add a product, goal, or item to this jar.</p>
+          </div>
 
-          <h1 className="mb-2 text-4xl font-extrabold">
-            Add something to this jar.
-          </h1>
-
-          <p className="mb-8 text-gray-600">
-            Add a product, goal, or item that belongs inside this WishJar.
-          </p>
-
-          <form onSubmit={handleCreateWish} className="space-y-5">
+          <form onSubmit={handleCreateWish} className="px-4 py-5 space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-semibold">
-                Wish item name
+              <label className="mb-1 block text-xs font-semibold text-gray-700">
+                Item name <span className="text-red-500">*</span>
               </label>
               <input
                 value={title}
-                onChange={(event) => setTitle(event.target.value)}
+                onChange={(e) => setTitle(e.target.value)}
                 required
-                placeholder="PlayStation 5"
-                className="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-violet-500"
+                placeholder="e.g. PlayStation 5"
+                maxLength={200}
+                className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold">
-                Product link
+              <label className="mb-1 block text-xs font-semibold text-gray-700">
+                Product link <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               <input
                 value={productUrl}
-                onChange={(event) => setProductUrl(event.target.value)}
+                onChange={(e) => setProductUrl(e.target.value)}
                 placeholder="https://example.com/product"
-                className="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-violet-500"
+                className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold">
-                Price
+              <label className="mb-1 block text-xs font-semibold text-gray-700">
+                Price <span className="text-gray-400 font-normal">(optional)</span>
               </label>
-              <input
-                value={price}
-                onChange={(event) => setPrice(event.target.value)}
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="499"
-                className="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-violet-500"
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">$</span>
+                <input
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="499"
+                  className="w-full rounded border border-gray-300 pl-7 pr-3 py-2 text-sm outline-none focus:border-violet-500"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold">
-                Description
+              <label className="mb-1 block text-xs font-semibold text-gray-700">
+                Description <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               <textarea
                 value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                placeholder="Why this item matters..."
-                rows={4}
-                className="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-violet-500"
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Why this item matters…"
+                rows={3}
+                maxLength={1000}
+                className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
               />
             </div>
 
             {errorMessage && (
-              <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
-                {errorMessage}
-              </p>
+              <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{errorMessage}</p>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-full bg-violet-700 px-6 py-4 font-semibold text-white disabled:opacity-60"
-            >
-              {loading ? "Adding..." : "Add Wish Item"}
-            </button>
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                type="submit"
+                disabled={loading}
+                className="rounded bg-violet-700 px-5 py-2 text-sm font-semibold text-white hover:bg-violet-800 disabled:opacity-60"
+              >
+                {loading ? "Adding…" : "Add Item"}
+              </button>
+              <a href={`/jars/${jarId}`} className="text-sm text-gray-500 hover:text-gray-800">
+                Cancel
+              </a>
+            </div>
           </form>
-        </section>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
