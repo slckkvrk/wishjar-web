@@ -176,7 +176,22 @@ Dark mode: disabled (remove `prefers-color-scheme: dark` override — warm palet
 
 ---
 
-## 6. Out of Scope
+## 6. BottomNav Visibility Rules
+
+BottomNav renders **only** on authenticated app pages:
+- `/dashboard`, `/jars`, `/jars/new`, `/jars/[id]`, `/jars/[id]/edit`, `/jars/[id]/wishes/*`
+- `/feed`, `/settings/profile`, `/u/[username]`
+
+BottomNav does **not** render on:
+- `/` (landing), `/login`, `/signup`, `/setup/username`
+- `/privacy`, `/terms`
+- Any public jar view accessed without auth
+
+**Future path:** Migrate to `src/app/(app)/layout.tsx` route group so BottomNav lives in a shared authenticated layout. Not in scope now.
+
+---
+
+## 7. Out of Scope
 
 - Real push notifications (bell is decorative for now)
 - Following system (JarCard "Followed" button is static UI)
