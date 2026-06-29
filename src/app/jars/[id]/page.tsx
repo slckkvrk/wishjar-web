@@ -4,31 +4,22 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import SiteHeader from "@/components/SiteHeader";
+import JarIllustration from "@/components/JarIllustration";
+import ProgressBar from "@/components/ProgressBar";
+import BottomNav from "@/components/BottomNav";
 
 type Jar = {
-  id: string;
-  title: string;
-  description: string | null;
-  category: string;
-  goal_amount: number | null;
-  created_at: string;
-  user_id: string;
-  status: string;
+  id: string; title: string; description: string | null; category: string;
+  goal_amount: number | null; created_at: string; user_id: string; status: string;
 };
-
 type Wish = {
-  id: string;
-  title: string;
-  description: string | null;
-  product_url: string | null;
-  price: number | null;
-  created_at: string;
+  id: string; title: string; description: string | null;
+  product_url: string | null; price: number | null; created_at: string;
 };
 
 export default function JarDetailPage() {
   const params = useParams();
   const jarId = params.id as string;
-
   const [jar, setJar] = useState<Jar | null>(null);
   const [wishes, setWishes] = useState<Wish[]>([]);
   const [isOwner, setIsOwner] = useState(false);
@@ -42,28 +33,17 @@ export default function JarDetailPage() {
     const load = async () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) { window.location.href = "/login"; return; }
-
       const { data, error } = await supabase
-        .from("jars")
-        .select("id, title, description, category, goal_amount, created_at, user_id, status")
-        .eq("id", jarId)
-        .single();
-
+        .from("jars").select("id, title, description, category, goal_amount, created_at, user_id, status")
+        .eq("id", jarId).single();
       if (error || !data) { setMessage("Jar not found."); setLoading(false); return; }
-
       setJar(data);
       setIsOwner(data.user_id === userData.user.id);
-
       const { data: profile } = await supabase.from("profiles").select("username").eq("id", data.user_id).single();
       setOwnerUsername(profile?.username ?? null);
-
-      const { data: wishesData, error: wishesError } = await supabase
-        .from("wishes")
-        .select("id, title, description, product_url, price, created_at")
-        .eq("jar_id", jarId)
-        .order("created_at", { ascending: false });
-
-      if (wishesError) { setMessage(wishesError.message); setLoading(false); return; }
+      const { data: wishesData } = await supabase
+        .from("wishes").select("id, title, description, product_url, price, created_at")
+        .eq("jar_id", jarId).order("created_at", { ascending: false });
       setWishes(wishesData ?? []);
       setLoading(false);
     };
@@ -85,230 +65,185 @@ export default function JarDetailPage() {
     setDeletingId(null);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#f0eeea]">
-        <SiteHeader />
-        <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-gray-500">Loading jar…</div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-screen bg-wj-cream">
+      <SiteHeader />
+      <div className="flex items-center justify-center pt-20 text-sm text-wj-muted">Loading jar…</div>
+    </div>
+  );
 
-  if (!jar) {
-    return (
-      <div className="min-h-screen bg-[#f0eeea]">
-        <SiteHeader />
-        <div className="mx-auto max-w-5xl px-4 py-8">
-          <p className="text-sm text-red-600">{message || "Jar not found."}</p>
-          <a href="/dashboard" className="mt-3 inline-block text-sm text-violet-700 hover:underline">← Back to Home</a>
-        </div>
+  if (!jar) return (
+    <div className="min-h-screen bg-wj-cream">
+      <SiteHeader />
+      <div className="mx-auto max-w-5xl px-4 py-8">
+        <p className="text-sm text-red-600">{message || "Jar not found."}</p>
+        <a href="/dashboard" className="mt-3 inline-block text-sm text-wj-plum hover:underline">← Back to Home</a>
       </div>
-    );
-  }
+    </div>
+  );
 
   const totalWishValue = wishes.reduce((s, w) => s + (w.price ?? 0), 0);
   const progressPct = jar.goal_amount && jar.goal_amount > 0
-    ? Math.min((totalWishValue / jar.goal_amount) * 100, 100) : 0;
+    ? Math.min(Math.round((totalWishValue / jar.goal_amount) * 100), 100) : 0;
+  const illustrationVariant = jar.status === "completed" ? "full" : wishes.length > 0 ? "partial" : "empty";
 
   return (
-    <div className="min-h-screen bg-[#f0eeea]">
+    <div className="min-h-screen bg-wj-cream pb-20 md:pb-0">
       <SiteHeader />
 
-      <div className="mx-auto max-w-5xl px-4 py-6">
-
-        {/* Breadcrumb */}
-        <p className="mb-4 text-xs text-gray-400">
-          <a href="/dashboard" className="hover:underline">Home</a>
-          {" / "}
-          <span>{jar.title}</span>
-        </p>
-
-        <div className="grid gap-5 md:grid-cols-[1fr_260px]">
-
-          {/* Left: jar info + wish list */}
-          <div className="space-y-4">
-
-            {/* Jar header */}
-            <div className="rounded border border-gray-200 bg-white shadow-sm">
-              <div className="flex items-start justify-between border-b border-gray-200 bg-gray-50 px-4 py-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-base font-bold text-gray-900">{jar.title}</h1>
-                    <span className="rounded bg-violet-100 px-1.5 py-0.5 text-xs text-violet-800">{jar.category}</span>
-                    {jar.status === "completed" && (
-                      <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-semibold text-green-700">Completed</span>
-                    )}
-                  </div>
-                  {ownerUsername && (
-                    <p className="mt-0.5 text-xs text-gray-400">
-                      by{" "}
-                      <a href={`/u/${ownerUsername}`} className="text-violet-700 hover:underline">
-                        @{ownerUsername}
-                      </a>
-                    </p>
-                  )}
+      {/* Mobile hero */}
+      <div
+        className="md:hidden"
+        style={{ background: jar.status === "completed" ? "#F0D080" : "#FDFAF3", borderBottom: "1px solid #E8DCBB" }}
+      >
+        <div className="px-4 pt-5 pb-4 flex items-start justify-between">
+          <div className="flex-1 pr-4">
+            <a href="/jars" className="text-xs text-wj-muted mb-2 inline-block">← My Jars</a>
+            <h1 className="text-2xl font-bold text-wj-text mb-1">{jar.title}</h1>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-wj-cream text-wj-muted">{jar.category}</span>
+            {ownerUsername && (
+              <p className="mt-1 text-xs text-wj-muted">
+                by <a href={`/u/${ownerUsername}`} className="text-wj-plum hover:underline">@{ownerUsername}</a>
+              </p>
+            )}
+            {jar.goal_amount && (
+              <div className="mt-3">
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-wj-muted">${totalWishValue.toLocaleString()} / ${jar.goal_amount.toLocaleString()}</span>
+                  <span className="font-semibold text-wj-text">{progressPct}%</span>
                 </div>
-                {isOwner && (
-                  <a
-                    href={`/jars/${jar.id}/edit`}
-                    className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
-                  >
-                    Edit jar
-                  </a>
-                )}
+                <ProgressBar value={progressPct} />
               </div>
-              {jar.description && (
-                <div className="px-4 py-3">
-                  <p className="text-sm leading-6 text-gray-600">{jar.description}</p>
-                </div>
-              )}
-            </div>
+            )}
+          </div>
+          <JarIllustration variant={illustrationVariant} size={90} />
+        </div>
+        {isOwner && (
+          <div className="px-4 pb-4 flex gap-2">
+            <a href={`/jars/${jar.id}/wishes/new`}
+              className="flex-1 py-2.5 text-sm font-bold text-center rounded-xl text-white bg-wj-plum">
+              + Add Wish
+            </a>
+            <a href={`/jars/${jar.id}/edit`}
+              className="flex-1 py-2.5 text-sm font-bold text-center rounded-xl text-wj-text bg-wj-card border border-wj-card-border">
+              Edit Jar
+            </a>
+            <button onClick={handleCopyLink}
+              className="flex-1 py-2.5 text-sm font-bold text-center rounded-xl text-wj-text bg-wj-card border border-wj-card-border">
+              {copied ? "Copied!" : "Share"}
+            </button>
+          </div>
+        )}
+      </div>
 
-            {/* Wish list */}
-            <div className="rounded border border-gray-200 bg-white shadow-sm">
-              <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-3">
-                <h2 className="text-sm font-bold text-gray-800">
-                  Wish Items
-                  <span className="ml-2 text-xs font-normal text-gray-400">
-                    ({wishes.length})
-                  </span>
-                </h2>
-                {isOwner && (
-                  <a
-                    href={`/jars/${jar.id}/wishes/new`}
-                    className="rounded bg-violet-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-800"
-                  >
-                    + Add item
-                  </a>
-                )}
-              </div>
-
-              {wishes.length === 0 ? (
-                <div className="px-4 py-8 text-center">
-                  <p className="text-sm text-gray-400">No wish items yet.</p>
-                  {isOwner && (
-                    <a href={`/jars/${jar.id}/wishes/new`} className="mt-2 inline-block text-sm text-violet-700 hover:underline">
-                      Add your first item
-                    </a>
-                  )}
-                </div>
-              ) : (
-                <ul className="divide-y divide-gray-100">
-                  {wishes.map((wish) => (
-                    <li key={wish.id} className="flex items-start justify-between px-4 py-3">
-                      <div className="flex-1 min-w-0 pr-3">
-                        <p className="text-sm font-semibold text-gray-800">{wish.title}</p>
-                        {wish.description && (
-                          <p className="mt-0.5 text-xs text-gray-500">{wish.description}</p>
-                        )}
-                        {wish.product_url && (
-                          <a
-                            href={wish.product_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-0.5 inline-block text-xs text-violet-700 hover:underline"
-                          >
-                            View product →
-                          </a>
-                        )}
-                      </div>
-                      <div className="flex shrink-0 flex-col items-end gap-1.5">
-                        {wish.price !== null && (
-                          <span className="text-sm font-bold text-gray-800">
-                            ${wish.price.toLocaleString()}
-                          </span>
-                        )}
-                        {isOwner && (
-                          <div className="flex gap-1.5">
-                            <a
-                              href={`/jars/${jar.id}/wishes/${wish.id}/edit`}
-                              className="rounded border border-gray-300 px-2 py-0.5 text-xs text-gray-600 hover:bg-gray-50"
-                            >
-                              Edit
-                            </a>
-                            <button
-                              onClick={() => handleDeleteWish(wish.id)}
-                              disabled={deletingId === wish.id}
-                              className="rounded border border-red-200 px-2 py-0.5 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
-                            >
-                              {deletingId === wish.id ? "…" : "Remove"}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {message && (
-                <div className="border-t border-gray-100 px-4 py-3">
-                  <p className="text-xs text-red-600">{message}</p>
-                </div>
-              )}
-            </div>
-
+      <div className="md:mx-auto md:max-w-5xl md:px-4 md:py-6 md:grid md:gap-5 md:grid-cols-[1fr_260px]">
+        {/* Wish list */}
+        <div className="px-4 pt-4 md:px-0 md:pt-0">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold text-wj-text">
+              Wish Items
+              <span className="ml-2 text-sm font-normal text-wj-muted">({wishes.length})</span>
+            </h2>
+            {isOwner && (
+              <a href={`/jars/${jar.id}/wishes/new`}
+                className="hidden md:inline-block px-4 py-2 rounded-xl text-sm font-bold text-white bg-wj-plum">
+                + Add item
+              </a>
+            )}
           </div>
 
-          {/* Right sidebar */}
-          <div className="space-y-4">
-
-            {/* Progress */}
-            <div className="rounded border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">Progress</span>
-              </div>
-              <div className="px-4 py-4">
-                <div className="mb-3 flex items-end justify-between text-xs text-gray-500">
-                  <div>
-                    <p className="text-xs text-gray-400">Total wish value</p>
-                    <p className="text-xl font-bold text-gray-900">${totalWishValue.toLocaleString()}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-400">Goal</p>
-                    <p className="text-xl font-bold text-violet-700">
-                      {jar.goal_amount ? `$${jar.goal_amount.toLocaleString()}` : "—"}
-                    </p>
-                  </div>
-                </div>
-                <div className="h-2 rounded-full bg-gray-200">
-                  <div
-                    className="h-2 rounded-full bg-violet-600 transition-all"
-                    style={{ width: `${progressPct}%` }}
-                  />
-                </div>
-                {jar.goal_amount && (
-                  <p className="mt-1.5 text-right text-xs text-gray-400">
-                    {Math.round(progressPct)}% of goal
-                  </p>
-                )}
-              </div>
+          {wishes.length === 0 ? (
+            <div className="py-10 text-center rounded-2xl bg-wj-card border border-wj-card-border">
+              <p className="text-sm text-wj-muted">No wish items yet.</p>
+              {isOwner && (
+                <a href={`/jars/${jar.id}/wishes/new`} className="mt-2 inline-block text-sm text-wj-plum hover:underline">
+                  Add your first item
+                </a>
+              )}
             </div>
-
-            {/* Share */}
-            <div className="rounded border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">Share this jar</span>
-              </div>
-              <div className="px-4 py-4">
-                <p className="mb-3 text-xs leading-5 text-gray-500">
-                  Share this link with friends, family, or your community.
-                </p>
-                <div className="mb-3 overflow-hidden rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-500 break-all">
-                  {typeof window !== "undefined" ? window.location.href : ""}
+          ) : (
+            <div className="space-y-2">
+              {wishes.map((wish) => (
+                <div key={wish.id} className="rounded-2xl p-4 bg-wj-card border border-wj-card-border flex items-start justify-between" style={{ boxShadow: "var(--wj-shadow)" }}>
+                  <div className="flex-1 min-w-0 pr-3">
+                    <p className="text-sm font-semibold text-wj-text">{wish.title}</p>
+                    {wish.description && <p className="mt-0.5 text-xs text-wj-muted">{wish.description}</p>}
+                    {wish.product_url && (
+                      <a href={wish.product_url} target="_blank" rel="noopener noreferrer"
+                        className="mt-0.5 inline-block text-xs text-wj-plum hover:underline">
+                        View product →
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1.5">
+                    {wish.price !== null && (
+                      <span className="text-sm font-bold text-wj-text">${wish.price.toLocaleString()}</span>
+                    )}
+                    {isOwner && (
+                      <div className="flex gap-1.5">
+                        <a href={`/jars/${jar.id}/wishes/${wish.id}/edit`}
+                          className="rounded-lg border border-wj-card-border px-2 py-0.5 text-xs text-wj-text hover:bg-wj-cream">
+                          Edit
+                        </a>
+                        <button onClick={() => handleDeleteWish(wish.id)} disabled={deletingId === wish.id}
+                          className="rounded-lg border border-red-200 px-2 py-0.5 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50">
+                          {deletingId === wish.id ? "…" : "Remove"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <button
-                  onClick={handleCopyLink}
-                  className="w-full rounded border border-violet-300 bg-violet-50 py-2 text-xs font-semibold text-violet-700 hover:bg-violet-100"
-                >
-                  {copied ? "Copied!" : "Copy link"}
-                </button>
-              </div>
+              ))}
             </div>
+          )}
+          {message && <p className="mt-3 text-xs text-red-600">{message}</p>}
+        </div>
 
+        {/* Desktop sidebar */}
+        <div className="hidden md:block space-y-4">
+          <div className="rounded-2xl p-4 bg-wj-card border border-wj-card-border" style={{ boxShadow: "var(--wj-shadow)" }}>
+            <div className="flex justify-center mb-3">
+              <JarIllustration variant={illustrationVariant} size={100} />
+            </div>
+            <h1 className="text-base font-bold text-wj-text mb-1">{jar.title}</h1>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-wj-cream text-wj-muted">{jar.category}</span>
+            {jar.description && <p className="mt-2 text-xs text-wj-muted leading-5">{jar.description}</p>}
+            {jar.goal_amount && (
+              <div className="mt-3">
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-wj-muted">${totalWishValue.toLocaleString()} / ${jar.goal_amount.toLocaleString()}</span>
+                  <span className="font-semibold text-wj-text">{progressPct}%</span>
+                </div>
+                <ProgressBar value={progressPct} />
+              </div>
+            )}
+            {isOwner && (
+              <div className="mt-3 space-y-2">
+                <a href={`/jars/${jar.id}/wishes/new`}
+                  className="block w-full py-2.5 text-sm font-bold text-center rounded-xl text-white bg-wj-plum">
+                  + Add Wish Item
+                </a>
+                <a href={`/jars/${jar.id}/edit`}
+                  className="block w-full py-2.5 text-sm font-bold text-center rounded-xl text-wj-text bg-wj-card border border-wj-card-border">
+                  Edit Jar
+                </a>
+              </div>
+            )}
+          </div>
+          <div className="rounded-2xl p-4 bg-wj-card border border-wj-card-border" style={{ boxShadow: "var(--wj-shadow)" }}>
+            <h3 className="text-xs font-semibold text-wj-muted uppercase tracking-wide mb-3">Share this jar</h3>
+            <div className="mb-3 rounded-xl border border-wj-card-border bg-wj-cream px-3 py-2 text-xs text-wj-muted break-all">
+              {typeof window !== "undefined" ? window.location.href : ""}
+            </div>
+            <button onClick={handleCopyLink}
+              className="w-full py-2 rounded-xl text-xs font-bold text-wj-plum border border-wj-plum hover:bg-wj-cream">
+              {copied ? "Copied!" : "Copy link"}
+            </button>
           </div>
         </div>
       </div>
+
+      <BottomNav />
     </div>
   );
 }

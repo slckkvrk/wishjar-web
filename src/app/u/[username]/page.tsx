@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { timeAgo } from "@/lib/time";
 import SiteHeader from "@/components/SiteHeader";
+import AvatarCircle from "@/components/AvatarCircle";
+import BottomNav from "@/components/BottomNav";
 import { sanitizeText } from "@/lib/validate";
 
 type Profile = { id: string; username: string; bio: string | null; created_at: string; };
@@ -20,7 +22,7 @@ export default function ProfilePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"posts" | "jars">("posts");
+  const [tab, setTab] = useState<"posts" | "jars">("posts");
 
   const [postContent, setPostContent] = useState("");
   const [postJarId, setPostJarId] = useState("");
@@ -72,194 +74,204 @@ export default function ProfilePage() {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#f0eeea]">
-        <SiteHeader />
-        <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-gray-500">Loading…</div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-screen bg-wj-cream">
+      <SiteHeader />
+      <div className="flex items-center justify-center pt-20 text-sm text-wj-muted">Loading…</div>
+    </div>
+  );
 
-  if (!profile) {
-    return (
-      <div className="min-h-screen bg-[#f0eeea]">
-        <SiteHeader />
-        <div className="mx-auto max-w-5xl px-4 py-8">
-          <p className="text-sm text-gray-600">User <strong>@{username}</strong> not found.</p>
-          <a href="/dashboard" className="mt-2 inline-block text-sm text-violet-700 hover:underline">← Home</a>
-        </div>
+  if (!profile) return (
+    <div className="min-h-screen bg-wj-cream">
+      <SiteHeader />
+      <div className="mx-auto max-w-5xl px-4 py-8">
+        <p className="text-sm text-wj-text">User <strong>@{username}</strong> not found.</p>
+        <a href="/dashboard" className="mt-2 inline-block text-sm text-wj-plum hover:underline">← Home</a>
       </div>
-    );
-  }
+    </div>
+  );
 
   const isOwn = currentUserId === profile.id;
 
   return (
-    <div className="min-h-screen bg-[#f0eeea]">
+    <div className="min-h-screen bg-wj-cream pb-20 md:pb-0">
       <SiteHeader activeTab="profile" />
 
-      <div className="mx-auto max-w-5xl px-4 py-6">
-        <p className="mb-4 text-xs text-gray-400">
-          <a href="/feed" className="hover:underline">Feed</a>
-          {" / "}@{profile.username}
-        </p>
-
-        <div className="grid gap-5 md:grid-cols-[1fr_260px]">
-          <div className="space-y-4">
-
-            {/* Profile card */}
-            <div className="rounded border border-gray-200 bg-white shadow-sm">
-              <div className="flex items-center justify-between px-4 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-violet-600 text-lg font-bold text-white">
-                    {profile.username[0].toUpperCase()}
-                  </div>
-                  <div>
-                    <h1 className="text-base font-bold text-gray-900">@{profile.username}</h1>
-                    {profile.bio && <p className="mt-0.5 text-sm text-gray-500">{profile.bio}</p>}
-                    <p className="mt-1 text-xs text-gray-400">
-                      {jars.length} jar{jars.length !== 1 ? "s" : ""} · {posts.length} post{posts.length !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-                </div>
-                {isOwn && (
-                  <a href="/settings/profile" className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
-                    Edit profile
-                  </a>
-                )}
-              </div>
+      {/* Mobile profile hero */}
+      <div className="md:hidden" style={{ background: "#FDFAF3", borderBottom: "1px solid #E8DCBB" }}>
+        <div className="px-4 pt-5 pb-4">
+          <div className="flex items-center gap-3 mb-3">
+            <AvatarCircle name={profile.username} size="lg" />
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-bold text-wj-text">@{profile.username}</h1>
+              {profile.bio && <p className="text-xs text-wj-muted mt-0.5">{profile.bio}</p>}
+              <p className="text-xs text-wj-muted mt-1">
+                {jars.length} jar{jars.length !== 1 ? "s" : ""} · {posts.length} post{posts.length !== 1 ? "s" : ""}
+              </p>
             </div>
-
-            {/* Write post */}
             {isOwn && (
-              <div className="rounded border border-gray-200 bg-white shadow-sm">
-                <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">New Post</span>
-                </div>
-                <div className="px-4 py-4 space-y-3">
-                  <textarea
-                    value={postContent}
-                    onChange={(e) => setPostContent(e.target.value)}
-                    placeholder="Tell your community why your jar matters…"
-                    rows={3}
-                    maxLength={500}
-                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
-                  />
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={postJarId}
-                      onChange={(e) => setPostJarId(e.target.value)}
-                      className="flex-1 rounded border border-gray-300 px-3 py-1.5 text-xs outline-none focus:border-violet-500"
-                    >
-                      <option value="">Link a jar (optional)</option>
-                      {jars.map((j) => <option key={j.id} value={j.id}>🫙 {j.title}</option>)}
-                    </select>
-                    <button
-                      onClick={handlePost}
-                      disabled={posting || !postContent.trim()}
-                      className="rounded bg-violet-700 px-4 py-1.5 text-xs font-semibold text-white hover:bg-violet-800 disabled:opacity-50"
-                    >
-                      {posting ? "Posting…" : "Post"}
-                    </button>
-                  </div>
-                  {postError && <p className="text-xs text-red-600">{postError}</p>}
-                </div>
-              </div>
+              <a href="/settings/profile"
+                className="shrink-0 rounded-xl border border-wj-card-border px-3 py-1.5 text-xs font-semibold text-wj-text hover:bg-wj-cream">
+                Edit
+              </a>
             )}
-
-            {/* Tabs */}
-            <div className="rounded border border-gray-200 bg-white shadow-sm">
-              <div className="flex border-b border-gray-200">
-                {(["posts", "jars"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-5 py-3 text-sm font-semibold capitalize transition-colors ${
-                      activeTab === tab
-                        ? "border-b-2 border-violet-700 text-violet-700"
-                        : "text-gray-500 hover:text-gray-800"
-                    }`}
-                  >
-                    {tab} ({tab === "posts" ? posts.length : jars.length})
-                  </button>
-                ))}
-              </div>
-
-              {/* Posts tab */}
-              {activeTab === "posts" && (
-                posts.length === 0 ? (
-                  <div className="px-4 py-8 text-center text-sm text-gray-400">
-                    {isOwn ? "You haven't posted yet." : "No posts yet."}
-                  </div>
-                ) : (
-                  <ul className="divide-y divide-gray-100">
-                    {posts.map((post) => (
-                      <li key={post.id} className="px-4 py-4">
-                        <div className="mb-1.5 flex items-center justify-between">
-                          <span className="text-xs text-gray-400">{timeAgo(post.created_at)}</span>
-                          {isOwn && (
-                            <button onClick={() => handleDeletePost(post.id)} className="text-xs text-gray-300 hover:text-red-500">
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                        <p className="text-sm leading-6 text-gray-800">{post.content}</p>
-                        {post.jar_title && post.jar_id && (
-                          <div className="mt-2">
-                            <a href={`/jars/${post.jar_id}`} className="inline-block rounded border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 hover:bg-violet-100">
-                              🫙 {post.jar_title}
-                            </a>
-                          </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )
-              )}
-
-              {/* Jars tab */}
-              {activeTab === "jars" && (
-                jars.length === 0 ? (
-                  <div className="px-4 py-8 text-center text-sm text-gray-400">
-                    {isOwn ? <><p>No jars yet.</p><a href="/jars/new" className="mt-2 inline-block text-violet-700 hover:underline">Create your first jar</a></> : "No jars yet."}
-                  </div>
-                ) : (
-                  <ul className="divide-y divide-gray-100">
-                    {jars.map((jar) => (
-                      <li key={jar.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
-                        <div className="min-w-0 flex-1 pr-3">
-                          <div className="flex items-center gap-2">
-                            <a href={`/jars/${jar.id}`} className="text-sm font-semibold text-violet-700 hover:underline">{jar.title}</a>
-                            <span className="rounded bg-violet-50 px-1.5 py-0.5 text-xs text-violet-700">{jar.category}</span>
-                          </div>
-                          {jar.description && <p className="mt-0.5 truncate text-xs text-gray-500">{jar.description}</p>}
-                        </div>
-                        {jar.goal_amount && <span className="shrink-0 text-xs font-semibold text-gray-600">${jar.goal_amount.toLocaleString()}</span>}
-                      </li>
-                    ))}
-                  </ul>
-                )
-              )}
-            </div>
-
           </div>
 
-          {/* Sidebar */}
-          <div>
-            <div className="rounded border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">About</span>
+          {/* Tab pills */}
+          <div className="flex items-center rounded-2xl p-1 gap-1 bg-wj-cream border border-wj-card-border">
+            {(["posts", "jars"] as const).map((t) => (
+              <button key={t} onClick={() => setTab(t)}
+                className="flex-1 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors"
+                style={{
+                  backgroundColor: tab === t ? "#3D1A24" : "transparent",
+                  color: tab === t ? "white" : "#9B7E6A",
+                }}>
+                {t.charAt(0).toUpperCase() + t.slice(1)} ({t === "posts" ? posts.length : jars.length})
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="md:mx-auto md:max-w-5xl md:px-4 md:py-6 md:grid md:gap-5 md:grid-cols-[1fr_260px]">
+        <div className="space-y-3 px-4 pt-4 md:px-0 md:pt-0">
+
+          {/* Desktop profile card */}
+          <div className="hidden md:block rounded-2xl p-4 bg-wj-card border border-wj-card-border" style={{ boxShadow: "var(--wj-shadow)" }}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AvatarCircle name={profile.username} size="lg" />
+                <div>
+                  <h1 className="text-base font-bold text-wj-text">@{profile.username}</h1>
+                  {profile.bio && <p className="mt-0.5 text-sm text-wj-muted">{profile.bio}</p>}
+                  <p className="mt-1 text-xs text-wj-muted">
+                    {jars.length} jar{jars.length !== 1 ? "s" : ""} · {posts.length} post{posts.length !== 1 ? "s" : ""}
+                  </p>
+                </div>
               </div>
-              <div className="px-4 py-3 text-xs text-gray-500 space-y-1.5">
-                <p><span className="text-gray-400">Username: </span><strong className="text-gray-700">@{profile.username}</strong></p>
-                <p><span className="text-gray-400">Joined: </span>{new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p>
-                {isOwn && <p className="pt-1"><a href="/settings/profile" className="text-violet-700 hover:underline">Edit profile settings</a></p>}
+              {isOwn && (
+                <a href="/settings/profile"
+                  className="rounded-xl border border-wj-card-border px-3 py-1.5 text-xs font-semibold text-wj-text hover:bg-wj-cream">
+                  Edit profile
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Desktop tab pills */}
+          <div className="hidden md:flex items-center rounded-2xl p-1 gap-1 bg-wj-card border border-wj-card-border" style={{ boxShadow: "var(--wj-shadow)" }}>
+            {(["posts", "jars"] as const).map((t) => (
+              <button key={t} onClick={() => setTab(t)}
+                className="flex-1 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors"
+                style={{
+                  backgroundColor: tab === t ? "#3D1A24" : "transparent",
+                  color: tab === t ? "white" : "#9B7E6A",
+                }}>
+                {t.charAt(0).toUpperCase() + t.slice(1)} ({t === "posts" ? posts.length : jars.length})
+              </button>
+            ))}
+          </div>
+
+          {/* Post composer */}
+          {isOwn && (
+            <div className="rounded-2xl p-4 bg-wj-card border border-wj-card-border" style={{ boxShadow: "var(--wj-shadow)" }}>
+              <h2 className="text-xs font-semibold text-wj-muted uppercase tracking-wide mb-3">New Post</h2>
+              <textarea value={postContent} onChange={(e) => setPostContent(e.target.value)}
+                placeholder="Tell your community why your jar matters…"
+                rows={3} maxLength={500}
+                className="w-full rounded-xl border border-wj-card-border bg-wj-cream px-3 py-2 text-sm outline-none focus:border-wj-plum text-wj-text" />
+              <div className="flex items-center gap-2 mt-2">
+                <select value={postJarId} onChange={(e) => setPostJarId(e.target.value)}
+                  className="flex-1 rounded-xl border border-wj-card-border bg-wj-card px-3 py-1.5 text-xs outline-none text-wj-text">
+                  <option value="">Link a jar (optional)</option>
+                  {jars.map((j) => <option key={j.id} value={j.id}>🫙 {j.title}</option>)}
+                </select>
+                <button onClick={handlePost} disabled={posting || !postContent.trim()}
+                  className="rounded-xl bg-wj-plum px-4 py-1.5 text-xs font-bold text-white hover:bg-wj-plum-mid disabled:opacity-50">
+                  {posting ? "Posting…" : "Post"}
+                </button>
               </div>
+              {postError && <p className="mt-2 text-xs text-red-600">{postError}</p>}
+            </div>
+          )}
+
+          {/* Posts tab */}
+          {tab === "posts" && (
+            posts.length === 0 ? (
+              <div className="py-10 text-center rounded-2xl bg-wj-card border border-wj-card-border">
+                <p className="text-sm text-wj-muted">{isOwn ? "You haven't posted yet." : "No posts yet."}</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {posts.map((post) => (
+                  <div key={post.id} className="rounded-2xl p-4 bg-wj-card border border-wj-card-border" style={{ boxShadow: "var(--wj-shadow)" }}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-wj-muted">{timeAgo(post.created_at)}</span>
+                      {isOwn && (
+                        <button onClick={() => handleDeletePost(post.id)} className="text-xs text-wj-muted hover:text-red-500">
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-sm leading-6 text-wj-text">{post.content}</p>
+                    {post.jar_title && post.jar_id && (
+                      <div className="mt-2">
+                        <a href={`/jars/${post.jar_id}`} className="inline-block rounded-xl border border-wj-gold-card bg-wj-gold-light px-2.5 py-1 text-xs font-semibold text-wj-text hover:opacity-80">
+                          🫙 {post.jar_title}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )
+          )}
+
+          {/* Jars tab */}
+          {tab === "jars" && (
+            jars.length === 0 ? (
+              <div className="py-10 text-center rounded-2xl bg-wj-card border border-wj-card-border">
+                <p className="text-sm text-wj-muted">{isOwn ? "No jars yet." : "No jars yet."}</p>
+                {isOwn && <a href="/jars/new" className="mt-2 inline-block text-sm text-wj-plum hover:underline">Create your first jar</a>}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {jars.map((jar) => (
+                  <a key={jar.id} href={`/jars/${jar.id}`}
+                    className="block rounded-2xl p-4 bg-wj-card border border-wj-card-border hover:opacity-80" style={{ boxShadow: "var(--wj-shadow)" }}>
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0 flex-1 pr-3">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="text-sm font-semibold text-wj-plum">{jar.title}</span>
+                          <span className="rounded-full bg-wj-cream px-2 py-0.5 text-xs text-wj-muted">{jar.category}</span>
+                        </div>
+                        {jar.description && <p className="text-xs text-wj-muted line-clamp-1">{jar.description}</p>}
+                      </div>
+                      {jar.goal_amount && <span className="shrink-0 text-xs font-semibold text-wj-text">${jar.goal_amount.toLocaleString()}</span>}
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )
+          )}
+        </div>
+
+        {/* Desktop sidebar */}
+        <div className="hidden md:block space-y-4">
+          <div className="rounded-2xl p-4 bg-wj-card border border-wj-card-border" style={{ boxShadow: "var(--wj-shadow)" }}>
+            <h3 className="text-xs font-semibold text-wj-muted uppercase tracking-wide mb-3">About</h3>
+            <div className="text-xs text-wj-muted space-y-1.5">
+              <p><span className="text-wj-text font-semibold">@{profile.username}</span></p>
+              <p>Joined {new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p>
+              {isOwn && (
+                <p className="pt-1"><a href="/settings/profile" className="text-wj-plum hover:underline">Edit profile settings</a></p>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      <BottomNav active="profile" />
     </div>
   );
 }

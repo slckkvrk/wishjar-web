@@ -25,97 +25,65 @@ export default function SetupUsernamePage() {
     const cleaned = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
     if (cleaned.length < 3) { setMessage("Username must be at least 3 characters (letters, numbers, underscore)."); return; }
     if (cleaned.length > 20) { setMessage("Username must be 20 characters or less."); return; }
-
     setSaving(true);
     setMessage("");
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) { window.location.href = "/login"; return; }
-
-    const { error } = await supabase.from("profiles").insert({
-      id: userData.user.id,
-      username: cleaned,
-      bio: bio.trim() || null,
-    });
+    const { error } = await supabase.from("profiles").insert({ id: userData.user.id, username: cleaned, bio: bio.trim() || null });
     setSaving(false);
-
     if (error) {
-      if (error.message.includes("unique")) {
-        setMessage("This username is already taken. Try another one.");
-      } else {
-        setMessage(error.message);
-      }
+      if (error.message.includes("unique")) { setMessage("This username is already taken. Try another one."); }
+      else { setMessage(error.message); }
       return;
     }
-
     window.location.href = "/dashboard";
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f0eeea]">
-        <p className="text-sm text-gray-500">Loading…</p>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex min-h-screen items-center justify-center bg-wj-cream">
+      <p className="text-sm text-wj-muted">Loading…</p>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#f0eeea]">
-      {/* Simple top bar */}
-      <div className="flex h-10 items-center bg-[#2c1875] px-4">
+    <div className="min-h-screen bg-wj-cream">
+      <div className="flex h-12 items-center px-4" style={{ background: "#3D1A24", borderBottom: "1px solid #6B2D40" }}>
         <span className="text-sm font-bold text-white">WishJar</span>
       </div>
 
       <div className="mx-auto max-w-sm px-4 py-12">
         <div className="mb-6 text-center">
-          <h1 className="text-lg font-bold text-gray-900">One last step</h1>
-          <p className="mt-1 text-xs text-gray-500">Choose your WishJar username to continue.</p>
+          <h1 className="text-lg font-bold text-wj-text">One last step</h1>
+          <p className="mt-1 text-xs text-wj-muted">Choose your WishJar username to continue.</p>
         </div>
 
-        <div className="rounded border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-            <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">Set up your profile</span>
+        <div className="rounded-2xl bg-wj-card border border-wj-card-border overflow-hidden" style={{ boxShadow: "var(--wj-shadow)" }}>
+          <div className="border-b border-wj-card-border px-4 py-3">
+            <span className="text-xs font-semibold uppercase tracking-wide text-wj-muted">Set up your profile</span>
           </div>
           <div className="px-4 py-5 space-y-4">
             <div>
-              <label className="mb-1 block text-xs font-semibold text-gray-700">
-                Username <span className="text-red-500">*</span>
-              </label>
-              <div className="flex items-center rounded border border-gray-300 px-3 py-2 focus-within:border-violet-500">
-                <span className="mr-1 text-sm text-gray-400">@</span>
-                <input
-                  value={username}
+              <label className="mb-1 block text-xs font-semibold text-wj-text">Username <span className="text-red-500">*</span></label>
+              <div className="flex items-center rounded-xl border border-wj-card-border bg-wj-cream px-3 py-2.5 focus-within:border-wj-plum">
+                <span className="mr-1 text-sm text-wj-muted">@</span>
+                <input value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-                  placeholder="yourname"
-                  maxLength={20}
-                  className="flex-1 text-sm outline-none"
-                />
+                  placeholder="yourname" maxLength={20}
+                  className="flex-1 text-sm outline-none bg-transparent text-wj-text" />
               </div>
-              <p className="mt-1 text-xs text-gray-400">Letters, numbers, underscore only. 3–20 characters.</p>
+              <p className="mt-1 text-xs text-wj-muted">Letters, numbers, underscore only. 3–20 characters.</p>
             </div>
-
             <div>
-              <label className="mb-1 block text-xs font-semibold text-gray-700">
-                Bio <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="A short line about you…"
-                rows={3}
-                maxLength={160}
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
-              />
+              <label className="mb-1 block text-xs font-semibold text-wj-text">Bio <span className="text-wj-muted font-normal">(optional)</span></label>
+              <textarea value={bio} onChange={(e) => setBio(e.target.value)}
+                placeholder="A short line about you…" rows={3} maxLength={160}
+                className="w-full rounded-xl border border-wj-card-border bg-wj-cream px-3 py-2.5 text-sm outline-none focus:border-wj-plum text-wj-text" />
             </div>
-
             {message && (
-              <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{message}</p>
+              <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{message}</p>
             )}
-
-            <button
-              onClick={handleSave}
-              disabled={saving || username.length < 3}
-              className="w-full rounded bg-violet-700 py-2 text-sm font-semibold text-white hover:bg-violet-800 disabled:opacity-50"
-            >
+            <button onClick={handleSave} disabled={saving || username.length < 3}
+              className="w-full rounded-xl bg-wj-plum py-2.5 text-sm font-bold text-white hover:bg-wj-plum-mid disabled:opacity-50">
               {saving ? "Saving…" : "Continue to WishJar"}
             </button>
           </div>

@@ -1,22 +1,22 @@
 export default function TermsPage() {
   return (
-    <main className="min-h-screen bg-white px-6 py-12 text-gray-800">
+    <main className="min-h-screen bg-wj-cream px-6 py-12 text-wj-text">
       <div className="mx-auto max-w-3xl">
-        <a href="/" className="mb-8 inline-block text-sm text-violet-600 hover:underline">
+        <a href="/" className="mb-8 inline-block text-sm text-wj-plum hover:underline">
           ← Back to WishJar
         </a>
 
-        <h1 className="mb-2 text-4xl font-bold">Terms of Service</h1>
-        <p className="mb-10 text-sm text-gray-400">Last updated: June 27, 2026</p>
+        <h1 className="mb-2 text-4xl font-bold text-wj-text">Terms of Service</h1>
+        <p className="mb-10 text-sm text-wj-muted">Last updated: June 27, 2026</p>
 
-        <section className="space-y-10 text-sm leading-7 text-gray-700">
+        <section className="space-y-10 text-sm leading-7 text-wj-text">
 
           <div>
-            <h2 className="mb-3 text-xl font-bold text-gray-900">1. Acceptance</h2>
+            <h2 className="mb-3 text-xl font-bold text-wj-text">1. Acceptance</h2>
             <p>
               By creating a WishJar account you agree to these Terms of Service
               and our{" "}
-              <a href="/privacy" className="text-violet-600 underline">
+              <a href="/privacy" className="text-wj-plum underline">
                 Privacy Policy
               </a>
               . If you do not agree, do not use the service. These terms
@@ -26,7 +26,7 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="mb-3 text-xl font-bold text-gray-900">2. The Service</h2>
+            <h2 className="mb-3 text-xl font-bold text-wj-text">2. The Service</h2>
             <p>
               WishJar lets you create wishlists ("jars"), add wish items,
               share them with others, and post updates to your profile. The
@@ -37,7 +37,7 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="mb-3 text-xl font-bold text-gray-900">3. Eligibility</h2>
+            <h2 className="mb-3 text-xl font-bold text-wj-text">3. Eligibility</h2>
             <p>
               You must be at least 13 years old (or 16 in the EU/EEA) to use
               WishJar. By registering, you confirm that you meet this age
@@ -46,12 +46,12 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="mb-3 text-xl font-bold text-gray-900">4. Account Responsibility</h2>
+            <h2 className="mb-3 text-xl font-bold text-wj-text">4. Account Responsibility</h2>
             <p>
               You are responsible for maintaining the confidentiality of your
               credentials and for all activity that occurs under your account.
               Notify us immediately at{" "}
-              <a href="mailto:slckkvrk@gmail.com" className="text-violet-600 underline">
+              <a href="mailto:slckkvrk@gmail.com" className="text-wj-plum underline">
                 slckkvrk@gmail.com
               </a>{" "}
               if you suspect unauthorized access.
@@ -59,7 +59,7 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="mb-3 text-xl font-bold text-gray-900">5. Acceptable Use</h2>
+            <h2 className="mb-3 text-xl font-bold text-wj-text">5. Acceptable Use</h2>
             <p className="mb-3">You agree <strong>not</strong> to:</p>
             <ul className="ml-4 list-disc space-y-2">
               <li>Post content that is illegal, harmful, harassing, or deceptive</li>
@@ -72,7 +72,7 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="mb-3 text-xl font-bold text-gray-900">6. Your Content</h2>
+            <h2 className="mb-3 text-xl font-bold text-wj-text">6. Your Content</h2>
             <p>
               You retain ownership of content you create (jar titles,
               descriptions, posts). By posting, you grant WishJar a
@@ -83,7 +83,7 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="mb-3 text-xl font-bold text-gray-900">7. Third-Party Links</h2>
+            <h2 className="mb-3 text-xl font-bold text-wj-text">7. Third-Party Links</h2>
             <p>
               Wish items may contain links to third-party product pages. WishJar
               is not responsible for the content, accuracy, or safety of
@@ -92,7 +92,7 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="mb-3 text-xl font-bold text-gray-900">8. Service Availability</h2>
+            <h2 className="mb-3 text-xl font-bold text-wj-text">8. Service Availability</h2>
             <p>
               WishJar is provided "as is." We make no guarantees of uptime or
               continuous availability. We may modify, suspend, or discontinue
@@ -102,7 +102,7 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="mb-3 text-xl font-bold text-gray-900">9. Limitation of Liability</h2>
+            <h2 className="mb-3 text-xl font-bold text-wj-text">9. Limitation of Liability</h2>
             <p>
               To the fullest extent permitted by law, WishJar and its operators
               shall not be liable for indirect, incidental, or consequential
@@ -113,7 +113,7 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="mb-3 text-xl font-bold text-gray-900">10. Account Termination</h2>
+            <h2 className="mb-3 text-xl font-bold text-wj-text">10. Account Termination</h2>
             <p>
               You may delete your account at any time by contacting us. We may
               suspend or terminate accounts that violate these terms, with
@@ -123,7 +123,7 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="mb-3 text-xl font-bold text-gray-900">11. Governing Law</h2>
+            <h2 className="mb-3 text-xl font-bold text-wj-text">11. Governing Law</h2>
             <p>
               These terms are governed by the laws of the Republic of Turkey.
               Any disputes shall be subject to the jurisdiction of Istanbul
@@ -133,7 +133,7 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="mb-3 text-xl font-bold text-gray-900">12. Changes to Terms</h2>
+            <h2 className="mb-3 text-xl font-bold text-wj-text">12. Changes to Terms</h2>
             <p>
               We may update these terms. We will notify you by email or
               in-app notice at least 30 days before material changes take
@@ -142,10 +142,10 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="mb-3 text-xl font-bold text-gray-900">13. Contact</h2>
+            <h2 className="mb-3 text-xl font-bold text-wj-text">13. Contact</h2>
             <p>
               Questions about these terms:{" "}
-              <a href="mailto:slckkvrk@gmail.com" className="text-violet-600 underline">
+              <a href="mailto:slckkvrk@gmail.com" className="text-wj-plum underline">
                 slckkvrk@gmail.com
               </a>
             </p>
@@ -153,7 +153,7 @@ export default function TermsPage() {
 
         </section>
 
-        <footer className="mt-12 border-t pt-6 text-xs text-gray-400">
+        <footer className="mt-12 border-t pt-6 text-xs text-wj-muted">
           WishJar ·{" "}
           <a href="/privacy" className="underline">Privacy Policy</a>
           {" · "}

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import SiteHeader from "@/components/SiteHeader";
+import BottomNav from "@/components/BottomNav";
 import { isValidUrl, sanitizeText, isValidPrice } from "@/lib/validate";
 
 export default function EditWishPage() {
@@ -24,15 +25,10 @@ export default function EditWishPage() {
     const loadWish = async () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) { window.location.href = "/login"; return; }
-
       const { data, error } = await supabase
-        .from("wishes")
-        .select("id, title, description, product_url, price")
-        .eq("id", wishId)
-        .single();
-
+        .from("wishes").select("id, title, description, product_url, price")
+        .eq("id", wishId).single();
       if (error || !data) { setMessage("Wish item not found."); setLoading(false); return; }
-
       setTitle(data.title);
       setProductUrl(data.product_url ?? "");
       setPrice(data.price !== null ? String(data.price) : "");
@@ -47,7 +43,6 @@ export default function EditWishPage() {
     if (!title.trim()) { setMessage("Item name is required."); return; }
     if (productUrl && !isValidUrl(productUrl)) { setMessage("Please enter a valid product URL."); return; }
     if (price && !isValidPrice(price)) { setMessage("Please enter a valid price."); return; }
-
     setSaving(true);
     setMessage("");
     const { error } = await supabase.from("wishes").update({
@@ -61,107 +56,67 @@ export default function EditWishPage() {
     router.push(`/jars/${jarId}`);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#f0eeea]">
-        <SiteHeader />
-        <div className="mx-auto max-w-xl px-4 py-8 text-sm text-gray-500">Loading…</div>
-      </div>
-    );
-  }
+  const inputCls = "w-full rounded-xl border border-wj-card-border bg-wj-card px-3 py-2.5 text-sm outline-none focus:border-wj-plum text-wj-text";
+  const labelCls = "mb-1 block text-xs font-semibold text-wj-text";
+
+  if (loading) return (
+    <div className="min-h-screen bg-wj-cream">
+      <SiteHeader />
+      <div className="flex items-center justify-center pt-20 text-sm text-wj-muted">Loading…</div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#f0eeea]">
+    <div className="min-h-screen bg-wj-cream pb-20 md:pb-0">
       <SiteHeader activeTab="home" />
-
       <div className="mx-auto max-w-xl px-4 py-6">
-        <p className="mb-4 text-xs text-gray-400">
-          <a href="/dashboard" className="hover:underline">Home</a>
-          {" / "}
-          <a href={`/jars/${jarId}`} className="hover:underline">Jar</a>
-          {" / Edit item"}
-        </p>
+        <div className="md:hidden mb-4">
+          <a href={`/jars/${jarId}`} className="text-xs text-wj-muted">← Back to Jar</a>
+          <h1 className="text-xl font-bold text-wj-text mt-1">Edit Wish Item</h1>
+        </div>
 
-        <div className="rounded border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-            <h1 className="text-sm font-bold text-gray-800">Edit wish item</h1>
-          </div>
-
-          <form onSubmit={handleSave} className="px-4 py-5 space-y-4">
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-gray-700">
-                Item name <span className="text-red-500">*</span>
-              </label>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                maxLength={200}
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
-              />
+        <form onSubmit={handleSave}>
+          <div className="rounded-2xl bg-wj-card border border-wj-card-border p-5 space-y-4" style={{ boxShadow: "var(--wj-shadow)" }}>
+            <div className="hidden md:block border-b border-wj-card-border pb-3">
+              <h1 className="text-base font-bold text-wj-text">Edit wish item</h1>
             </div>
-
             <div>
-              <label className="mb-1 block text-xs font-semibold text-gray-700">
-                Product link <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <input
-                value={productUrl}
-                onChange={(e) => setProductUrl(e.target.value)}
-                placeholder="https://example.com/product"
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
-              />
+              <label className={labelCls}>Item name <span className="text-red-500">*</span></label>
+              <input value={title} onChange={(e) => setTitle(e.target.value)}
+                required maxLength={200} className={inputCls} />
             </div>
-
             <div>
-              <label className="mb-1 block text-xs font-semibold text-gray-700">
-                Price <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
+              <label className={labelCls}>Product link <span className="text-wj-muted font-normal">(optional)</span></label>
+              <input value={productUrl} onChange={(e) => setProductUrl(e.target.value)}
+                placeholder="https://example.com/product" className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Price <span className="text-wj-muted font-normal">(optional)</span></label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">$</span>
-                <input
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className="w-full rounded border border-gray-300 pl-7 pr-3 py-2 text-sm outline-none focus:border-violet-500"
-                />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-wj-muted">$</span>
+                <input value={price} onChange={(e) => setPrice(e.target.value)}
+                  type="number" min="0" step="0.01" className={`${inputCls} pl-7`} />
               </div>
             </div>
-
             <div>
-              <label className="mb-1 block text-xs font-semibold text-gray-700">
-                Description <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-                maxLength={1000}
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
-              />
+              <label className={labelCls}>Description <span className="text-wj-muted font-normal">(optional)</span></label>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)}
+                rows={3} maxLength={1000} className={inputCls} />
             </div>
-
             {message && (
-              <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{message}</p>
+              <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{message}</p>
             )}
-
             <div className="flex items-center gap-3 pt-1">
-              <button
-                type="submit"
-                disabled={saving}
-                className="rounded bg-violet-700 px-5 py-2 text-sm font-semibold text-white hover:bg-violet-800 disabled:opacity-60"
-              >
+              <button type="submit" disabled={saving}
+                className="rounded-xl bg-wj-plum px-5 py-2.5 text-sm font-bold text-white hover:bg-wj-plum-mid disabled:opacity-60">
                 {saving ? "Saving…" : "Save Changes"}
               </button>
-              <a href={`/jars/${jarId}`} className="text-sm text-gray-500 hover:text-gray-800">
-                Cancel
-              </a>
+              <a href={`/jars/${jarId}`} className="text-sm text-wj-muted hover:text-wj-text">Cancel</a>
             </div>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
+      <BottomNav />
     </div>
   );
 }

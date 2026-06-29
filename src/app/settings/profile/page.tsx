@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import SiteHeader from "@/components/SiteHeader";
+import BottomNav from "@/components/BottomNav";
 import { sanitizeText } from "@/lib/validate";
 
 export default function SettingsProfilePage() {
@@ -60,92 +61,71 @@ export default function SettingsProfilePage() {
     window.location.href = "/";
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#f0eeea]">
-        <SiteHeader />
-        <div className="mx-auto max-w-xl px-4 py-8 text-sm text-gray-500">Loading…</div>
-      </div>
-    );
-  }
+  const inputCls = "w-full rounded-xl border border-wj-card-border bg-wj-card px-3 py-2.5 text-sm outline-none focus:border-wj-plum text-wj-text";
+  const labelCls = "mb-1 block text-xs font-semibold text-wj-text";
+
+  if (loading) return (
+    <div className="min-h-screen bg-wj-cream">
+      <SiteHeader />
+      <div className="flex items-center justify-center pt-20 text-sm text-wj-muted">Loading…</div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#f0eeea]">
+    <div className="min-h-screen bg-wj-cream pb-20 md:pb-0">
       <SiteHeader />
 
       <div className="mx-auto max-w-xl px-4 py-6">
-        <p className="mb-4 text-xs text-gray-400">
+        <div className="md:hidden mb-4">
           {currentUsername && (
-            <><a href={`/u/${currentUsername}`} className="hover:underline">@{currentUsername}</a>{" / "}</>
+            <a href={`/u/${currentUsername}`} className="text-xs text-wj-muted">← @{currentUsername}</a>
           )}
-          Settings
-        </p>
+          <h1 className="text-xl font-bold text-wj-text mt-1">Settings</h1>
+        </div>
 
-        {/* Profile settings */}
-        <div className="rounded border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-            <h1 className="text-sm font-bold text-gray-800">Edit Profile</h1>
+        {/* Profile card */}
+        <div className="rounded-2xl bg-wj-card border border-wj-card-border p-5 space-y-4" style={{ boxShadow: "var(--wj-shadow)" }}>
+          <div className="border-b border-wj-card-border pb-3">
+            <h2 className="text-sm font-bold text-wj-text">Edit Profile</h2>
           </div>
-          <div className="px-4 py-5 space-y-4">
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-gray-700">Username</label>
-              <div className="flex items-center rounded border border-gray-300 px-3 py-2 focus-within:border-violet-500">
-                <span className="mr-1 text-sm text-gray-400">@</span>
-                <input
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-                  maxLength={20}
-                  className="flex-1 text-sm outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-gray-700">
-                Bio <span className="text-gray-400 font-normal">(optional, max 160 chars)</span>
-              </label>
-              <textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                rows={3}
-                maxLength={160}
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
-              />
-              <p className="mt-1 text-right text-xs text-gray-400">{bio.length}/160</p>
-            </div>
-
-            {message && (
-              <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{message}</p>
-            )}
-            {success && (
-              <p className="rounded border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">Profile updated.</p>
-            )}
-
-            <div className="flex items-center gap-3 pt-1">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="rounded bg-violet-700 px-5 py-2 text-sm font-semibold text-white hover:bg-violet-800 disabled:opacity-60"
-              >
-                {saving ? "Saving…" : "Save Changes"}
-              </button>
+          <div>
+            <label className={labelCls}>Username</label>
+            <div className="flex items-center rounded-xl border border-wj-card-border bg-wj-card px-3 py-2.5 focus-within:border-wj-plum">
+              <span className="mr-1 text-sm text-wj-muted">@</span>
+              <input value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                maxLength={20} className="flex-1 text-sm outline-none bg-transparent text-wj-text" />
             </div>
           </div>
+          <div>
+            <label className={labelCls}>Bio <span className="text-wj-muted font-normal">(optional, max 160 chars)</span></label>
+            <textarea value={bio} onChange={(e) => setBio(e.target.value)}
+              rows={3} maxLength={160} className={inputCls} />
+            <p className="mt-1 text-right text-xs text-wj-muted">{bio.length}/160</p>
+          </div>
+          {message && (
+            <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{message}</p>
+          )}
+          {success && (
+            <p className="rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">Profile updated.</p>
+          )}
+          <button onClick={handleSave} disabled={saving}
+            className="rounded-xl bg-wj-plum px-5 py-2.5 text-sm font-bold text-white hover:bg-wj-plum-mid disabled:opacity-60">
+            {saving ? "Saving…" : "Save Changes"}
+          </button>
         </div>
 
         {/* Legal */}
-        <div className="mt-4 rounded border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-            <h2 className="text-sm font-bold text-gray-800">Legal</h2>
-          </div>
-          <div className="px-4 py-4 space-y-2 text-sm">
-            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="block text-violet-700 hover:underline">
+        <div className="mt-4 rounded-2xl bg-wj-card border border-wj-card-border p-5" style={{ boxShadow: "var(--wj-shadow)" }}>
+          <h2 className="text-sm font-bold text-wj-text mb-3">Legal</h2>
+          <div className="space-y-2 text-sm">
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="block text-wj-plum hover:underline">
               Privacy Policy (KVKK Aydınlatma Metni / GDPR)
             </a>
-            <a href="/terms" target="_blank" rel="noopener noreferrer" className="block text-violet-700 hover:underline">
+            <a href="/terms" target="_blank" rel="noopener noreferrer" className="block text-wj-plum hover:underline">
               Terms of Service
             </a>
-            <p className="mt-2 text-xs text-gray-400">
+            <p className="mt-2 text-xs text-wj-muted">
               To request data access, correction, or deletion, email{" "}
               <a href="mailto:slckkvrk@gmail.com" className="underline">slckkvrk@gmail.com</a>.
             </p>
@@ -153,24 +133,19 @@ export default function SettingsProfilePage() {
         </div>
 
         {/* Danger zone */}
-        <div className="mt-4 rounded border border-red-200 bg-white shadow-sm">
-          <div className="border-b border-red-100 bg-red-50 px-4 py-3">
-            <h2 className="text-sm font-bold text-red-700">Danger Zone</h2>
-          </div>
-          <div className="px-4 py-4">
-            <p className="mb-3 text-xs leading-5 text-gray-500">
-              Deleting your account permanently removes all your data. This cannot be undone.
-            </p>
-            <button
-              onClick={handleDeleteAccount}
-              disabled={deleting}
-              className="rounded border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50"
-            >
-              {deleting ? "Deleting…" : "Delete My Account"}
-            </button>
-          </div>
+        <div className="mt-4 rounded-2xl bg-wj-card border border-red-200 p-5" style={{ boxShadow: "var(--wj-shadow)" }}>
+          <h2 className="text-sm font-bold text-red-600 mb-2">Danger Zone</h2>
+          <p className="mb-3 text-xs leading-5 text-wj-muted">
+            Deleting your account permanently removes all your data. This cannot be undone.
+          </p>
+          <button onClick={handleDeleteAccount} disabled={deleting}
+            className="rounded-xl border border-red-300 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50 disabled:opacity-50">
+            {deleting ? "Deleting…" : "Delete My Account"}
+          </button>
         </div>
       </div>
+
+      <BottomNav active="profile" />
     </div>
   );
 }
