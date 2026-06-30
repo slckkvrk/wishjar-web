@@ -6,15 +6,13 @@ import SiteHeader from "@/components/SiteHeader";
 import BottomNav from "@/components/BottomNav";
 import { sanitizeText } from "@/lib/validate";
 
-export default function SettingsProfilePage() {
+export default function EditProfilePage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [savedUsername, setSavedUsername] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -37,7 +35,7 @@ export default function SettingsProfilePage() {
 
   const handleSave = async () => {
     const cleaned = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
-    if (cleaned.length < 3) { setMessage("Username must be at least 3 characters."); return; }
+    if (cleaned.length < 3) { setMessage("Min 3 characters."); return; }
     if (!userId) return;
     setSaving(true);
     setMessage("");
@@ -45,7 +43,6 @@ export default function SettingsProfilePage() {
 
     const bioVal = sanitizeText(bio, 160) || null;
 
-    // Try UPDATE first; if no rows affected (profile doesn't exist), fall back to INSERT
     const { data: updated, error: updateErr } = await supabase
       .from("profiles")
       .update({ username: cleaned, bio: bioVal })
@@ -54,7 +51,6 @@ export default function SettingsProfilePage() {
       .single();
 
     if (updateErr) {
-      // PGRST116 = no rows matched — profile row missing, try upsert
       if (updateErr.code === "PGRST116") {
         const { error: upsertErr } = await supabase
           .from("profiles")
@@ -62,19 +58,19 @@ export default function SettingsProfilePage() {
         if (upsertErr) {
           setSaving(false);
           if (upsertErr.message.includes("unique") || upsertErr.message.includes("duplicate")) {
-            setMessage("This username is already taken. Try another one.");
+            setMessage("Username taken. Try another.");
           } else {
-            setMessage(`Save failed: ${upsertErr.message} [${upsertErr.code}]`);
+            setMessage(`Error: ${upsertErr.message} [${upsertErr.code}]`);
           }
           return;
         }
       } else if (updateErr.message.includes("unique") || updateErr.message.includes("duplicate")) {
         setSaving(false);
-        setMessage("This username is already taken. Try another one.");
+        setMessage("Username taken. Try another.");
         return;
       } else {
         setSaving(false);
-        setMessage(`Save failed: ${updateErr.message} [${updateErr.code}]`);
+        setMessage(`Error: ${updateErr.message} [${updateErr.code}]`);
         return;
       }
     }
@@ -85,20 +81,6 @@ export default function SettingsProfilePage() {
     setUsername(finalUsername);
     setBio(updated?.bio ?? bio);
     setSuccess(true);
-  };
-
-  const handleSignOut = async () => {
-    setSigningOut(true);
-    await supabase.auth.signOut();
-    window.location.href = "/";
-  };
-
-  const handleDeleteAccount = async () => {
-    if (!confirm("Delete account? All data will be removed. Cannot be undone.")) return;
-    if (!confirm("Sure?")) return;
-    setDeleting(true);
-    await supabase.auth.signOut();
-    window.location.href = "/";
   };
 
   const inputCls = "w-full rounded-xl border border-wj-card-border bg-wj-card px-3 py-2.5 text-sm outline-none focus:border-wj-plum text-wj-text";
@@ -116,28 +98,23 @@ export default function SettingsProfilePage() {
       <SiteHeader />
 
       <div className="mx-auto max-w-xl px-4 py-6">
-        {/* Back navigation */}
         <div className="flex items-center gap-3 mb-5 text-sm">
-          <a
-            href={savedUsername ? `/u/${savedUsername}` : "/setup/username"}
-            className="text-wj-plum hover:underline"
-          >
-            ← Back to Profile
+          <a href={savedUsername ? `/u/${savedUsername}` : "/dashboard"} className="text-wj-plum hover:underline">
+            ← Profile
           </a>
           <span className="text-wj-muted">·</span>
-          <a href="/dashboard" className="text-wj-muted hover:text-wj-text">Home</a>
+          <a href="/settings" className="text-wj-muted hover:text-wj-text">Settings</a>
         </div>
 
         <div className="md:hidden mb-4">
-          <h1 className="text-xl font-bold text-wj-text">Profile Settings</h1>
-          <p className="text-xs text-wj-muted mt-0.5">Your public info.</p>
+          <h1 className="text-xl font-bold text-wj-text">Edit Profile</h1>
+          <p className="text-xs text-wj-muted mt-0.5">What others see on your public page.</p>
         </div>
 
-        {/* Profile card */}
         <div className="rounded-2xl bg-wj-card border border-wj-card-border p-5 space-y-4" style={{ boxShadow: "var(--wj-shadow)" }}>
           <div className="border-b border-wj-card-border pb-3">
-            <h2 className="text-sm font-bold text-wj-text">Edit Profile</h2>
-            <p className="text-xs text-wj-muted mt-0.5">Visible on your public page.</p>
+            <h2 className="text-sm font-bold text-wj-text">Public profile</h2>
+            <p className="text-xs text-wj-muted mt-0.5">Visible to everyone.</p>
           </div>
           <div>
             <label className={labelCls}>Username</label>
@@ -151,7 +128,7 @@ export default function SettingsProfilePage() {
                 className="flex-1 text-sm outline-none bg-transparent text-wj-text"
               />
             </div>
-            <p className="mt-1 text-xs text-wj-muted">a-z, 0-9, _ · min 3</p>
+            <p className="mt-1 text-xs text-wj-muted">a-z, 0-9, _ · 3–20 chars</p>
           </div>
           <div>
             <label className={labelCls}>Bio <span className="text-wj-muted font-normal">(optional)</span></label>
@@ -170,7 +147,7 @@ export default function SettingsProfilePage() {
           )}
           {success && (
             <p className="rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
-              Profile saved! <a href={`/u/${savedUsername}`} className="underline font-semibold">View your profile →</a>
+              Saved! <a href={`/u/${savedUsername}`} className="underline font-semibold">View profile →</a>
             </p>
           )}
           <button
@@ -178,52 +155,7 @@ export default function SettingsProfilePage() {
             disabled={saving}
             className="rounded-xl bg-wj-plum px-5 py-2.5 text-sm font-bold text-white hover:bg-wj-plum-mid disabled:opacity-60"
           >
-            {saving ? "Saving…" : "Save Changes"}
-          </button>
-        </div>
-
-        {/* Account / Sign Out */}
-        <div className="mt-4 rounded-2xl bg-wj-card border border-wj-card-border p-5" style={{ boxShadow: "var(--wj-shadow)" }}>
-          <h2 className="text-sm font-bold text-wj-text mb-1">Account</h2>
-          <p className="text-xs text-wj-muted mb-3">Sign out now.</p>
-          <button
-            onClick={handleSignOut}
-            disabled={signingOut}
-            className="w-full rounded-xl border border-wj-card-border py-2.5 text-sm font-bold text-wj-text hover:bg-wj-cream disabled:opacity-50"
-          >
-            {signingOut ? "Signing out…" : "Sign Out"}
-          </button>
-        </div>
-
-        {/* Legal */}
-        <div className="mt-4 rounded-2xl bg-wj-card border border-wj-card-border p-5" style={{ boxShadow: "var(--wj-shadow)" }}>
-          <h2 className="text-sm font-bold text-wj-text mb-3">Legal</h2>
-          <div className="space-y-2 text-sm">
-            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="block text-wj-plum hover:underline">
-              Privacy Policy
-            </a>
-            <a href="/terms" target="_blank" rel="noopener noreferrer" className="block text-wj-plum hover:underline">
-              Terms of Service
-            </a>
-            <p className="mt-2 text-xs text-wj-muted">
-              Questions? Email{" "}
-              <a href="mailto:slckkvrk@gmail.com" className="underline">slckkvrk@gmail.com</a>
-            </p>
-          </div>
-        </div>
-
-        {/* Danger zone */}
-        <div className="mt-4 rounded-2xl bg-wj-card border border-red-200 p-5" style={{ boxShadow: "var(--wj-shadow)" }}>
-          <h2 className="text-sm font-bold text-red-600 mb-2">Danger Zone</h2>
-          <p className="mb-3 text-xs leading-5 text-wj-muted">
-            Removes all data. Cannot be undone.
-          </p>
-          <button
-            onClick={handleDeleteAccount}
-            disabled={deleting}
-            className="rounded-xl border border-red-300 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
-          >
-            {deleting ? "Deleting…" : "Delete My Account"}
+            {saving ? "Saving…" : "Save"}
           </button>
         </div>
       </div>

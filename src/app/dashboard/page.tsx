@@ -96,7 +96,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-2">
             {/* Settings — gear icon → /settings/profile */}
-            <a href="/settings/profile"
+            <a href="/settings"
               className="w-9 h-9 rounded-xl flex items-center justify-center bg-wj-card border border-wj-card-border"
               aria-label="Settings"
               title="Settings"

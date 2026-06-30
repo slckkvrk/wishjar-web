@@ -57,7 +57,7 @@ export default function SiteHeader({ activeTab }: Props) {
         </div>
         <div className="flex items-center gap-3 text-sm">
           {username && (
-            <a href="/settings/profile" className="text-white/60 hover:text-white">Settings</a>
+            <a href="/settings" className="text-white/60 hover:text-white">Settings</a>
           )}
           <button onClick={handleLogout} className="text-white/60 hover:text-white">Sign out</button>
         </div>
