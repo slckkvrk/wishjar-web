@@ -107,7 +107,7 @@ export default function JarCard({ jar, totalWishValue = 0, isOwn }: JarCardProps
               href={`/jars/${jar.id}`}
               className="flex-1 py-2 text-sm font-semibold text-center rounded-xl text-wj-text bg-wj-card border border-wj-card-border"
             >
-              {isOwn ? "View Jar" : "✓ Followed"}
+              View Jar
             </a>
             <button
               onClick={handleShare}
