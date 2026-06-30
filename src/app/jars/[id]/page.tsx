@@ -36,7 +36,11 @@ export default function JarDetailPage() {
       const { data, error } = await supabase
         .from("jars").select("id, title, description, category, goal_amount, created_at, user_id, status")
         .eq("id", jarId).single();
-      if (error || !data) { setMessage("Jar not found."); setLoading(false); return; }
+      if (error || !data) {
+        setMessage(error ? `Jar not found. (${error.code}: ${error.message})` : "Jar not found.");
+        setLoading(false);
+        return;
+      }
       setJar(data);
       setIsOwner(data.user_id === userData.user.id);
       const { data: profile } = await supabase.from("profiles").select("username").eq("id", data.user_id).single();
