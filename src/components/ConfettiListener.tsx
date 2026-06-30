@@ -57,14 +57,14 @@ export default function ConfettiListener() {
 
   return (
     <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-bounce-in">
-      <div className="flex items-center gap-3 rounded-2xl bg-white px-6 py-4 shadow-2xl ring-2 ring-violet-300">
+      <div className="flex items-center gap-3 rounded-2xl px-6 py-4 shadow-2xl" style={{ background: "#F0D080", border: "2px solid #C9973A" }}>
         <span className="text-2xl">🎉</span>
         <div>
-          <p className="font-bold text-gray-900">Jar completed!</p>
-          <p className="text-sm text-gray-500">
-            <span className="font-semibold text-violet-700">@{toast.username}</span>
+          <p className="font-bold text-wj-text">Jar completed!</p>
+          <p className="text-sm text-wj-muted">
+            <span className="font-semibold text-wj-plum">@{toast.username}</span>
             {" "}just completed{" "}
-            <span className="font-semibold">"{toast.jar_title}"</span>
+            <span className="font-semibold text-wj-text">"{toast.jar_title}"</span>
           </p>
         </div>
       </div>
