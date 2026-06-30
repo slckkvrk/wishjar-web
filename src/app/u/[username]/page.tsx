@@ -28,6 +28,7 @@ export default function ProfilePage() {
   const [postJarId, setPostJarId] = useState("");
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState("");
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -66,6 +67,12 @@ export default function ProfilePage() {
     setPosts((prev) => [{ ...inserted, jar_title: inserted.jar_id ? (jarMap[inserted.jar_id] ?? null) : null }, ...prev]);
     setPostContent("");
     setPostJarId("");
+  };
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    await supabase.auth.signOut();
+    window.location.href = "/";
   };
 
   const handleDeletePost = async (postId: string) => {
@@ -110,10 +117,16 @@ export default function ProfilePage() {
               </p>
             </div>
             {isOwn && (
-              <a href="/settings/profile"
-                className="shrink-0 rounded-xl border border-wj-card-border px-3 py-1.5 text-xs font-semibold text-wj-text hover:bg-wj-cream">
-                Edit
-              </a>
+              <div className="flex items-center gap-2 shrink-0">
+                <a href="/settings/profile"
+                  className="rounded-xl border border-wj-card-border px-3 py-1.5 text-xs font-semibold text-wj-text hover:bg-wj-cream">
+                  Edit
+                </a>
+                <button onClick={handleSignOut} disabled={signingOut}
+                  className="rounded-xl border border-wj-card-border px-3 py-1.5 text-xs font-semibold text-wj-muted hover:bg-wj-cream disabled:opacity-50">
+                  {signingOut ? "…" : "Sign out"}
+                </button>
+              </div>
             )}
           </div>
 
@@ -264,7 +277,14 @@ export default function ProfilePage() {
               <p><span className="text-wj-text font-semibold">@{profile.username}</span></p>
               <p>Joined {new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p>
               {isOwn && (
-                <p className="pt-1"><a href="/settings/profile" className="text-wj-plum hover:underline">Edit profile settings</a></p>
+                <>
+                  <p className="pt-1"><a href="/settings/profile" className="text-wj-plum hover:underline">Edit profile settings</a></p>
+                  <p>
+                    <button onClick={handleSignOut} disabled={signingOut} className="text-wj-muted hover:text-wj-text disabled:opacity-50">
+                      {signingOut ? "Signing out…" : "Sign out"}
+                    </button>
+                  </p>
+                </>
               )}
             </div>
           </div>

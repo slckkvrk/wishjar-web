@@ -1,6 +1,16 @@
+"use client";
+
+import { useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import JarIllustration from "@/components/JarIllustration";
 
 export default function Home() {
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) window.location.href = "/dashboard";
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-wj-cream text-wj-text">
       {/* Plum header */}
@@ -80,9 +90,29 @@ export default function Home() {
         </div>
       </div>
 
+      {/* How it works */}
+      <div className="mx-auto max-w-5xl px-4 py-12">
+        <h2 className="mb-8 text-center text-lg font-bold text-wj-text">Nasıl Çalışır?</h2>
+        <div className="grid gap-6 md:grid-cols-3">
+          {[
+            { step: "1", title: "Jar Oluştur", desc: "Hayalindeki hedef için bir jar yarat. Ev, düğün, bebek, seyahat — her şey olabilir." },
+            { step: "2", title: "Dilekleri Ekle", desc: "İstediğin ürünleri, fiyatlarını ve linklerini jar'a ekle. Hedef tutarını belirle." },
+            { step: "3", title: "Topluluğunla Paylaş", desc: "Jar linkini arkadaşlarınla paylaş. Onlar senin hedefini görsün ve desteklesin." },
+          ].map((item) => (
+            <div key={item.step} className="rounded-2xl bg-wj-card border border-wj-card-border p-5 text-center" style={{ boxShadow: "var(--wj-shadow)" }}>
+              <div className="mx-auto mb-3 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold text-white bg-wj-plum">
+                {item.step}
+              </div>
+              <h3 className="font-bold text-wj-text mb-2">{item.title}</h3>
+              <p className="text-xs text-wj-muted leading-5">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Categories */}
-      <div className="mx-auto max-w-5xl px-4 py-10">
-        <h2 className="mb-5 text-base font-semibold text-wj-text">Popular jar categories</h2>
+      <div className="mx-auto max-w-5xl px-4 pb-10">
+        <h2 className="mb-5 text-base font-semibold text-wj-text">Popüler Kategoriler</h2>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
           {["New Home", "Wedding", "Baby", "Travel", "Education", "Birthday", "Gaming", "Startup", "Charity", "Other"].map((cat) => (
             <div key={cat}
@@ -97,24 +127,26 @@ export default function Home() {
       {/* CTA strip */}
       <div className="border-t border-wj-card-border" style={{ background: "#3D1A24" }}>
         <div className="mx-auto max-w-5xl px-4 py-10 text-center">
-          <h2 className="text-xl font-bold text-white mb-3">Ready to start your jar?</h2>
-          <p className="text-sm text-white/70 mb-6">Free forever. No credit card required.</p>
+          <h2 className="text-xl font-bold text-white mb-3">Jar'ını oluşturmaya hazır mısın?</h2>
+          <p className="text-sm text-white/70 mb-6">Ücretsiz. Kredi kartı gerekmez.</p>
           <a href="/signup"
             className="inline-block rounded-2xl px-8 py-3 text-sm font-bold text-wj-plum hover:opacity-80"
             style={{ background: "#EDD98A" }}>
-            Get started free
+            Ücretsiz Başla
           </a>
         </div>
       </div>
 
       {/* Footer */}
       <footer className="border-t border-wj-card-border bg-wj-card">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 text-xs text-wj-muted">
-          <span>© 2026 WishJar</span>
-          <div className="flex gap-4">
-            <a href="/privacy" className="hover:text-wj-text">Privacy Policy</a>
-            <a href="/terms" className="hover:text-wj-text">Terms of Service</a>
-            <a href="mailto:slckkvrk@gmail.com" className="hover:text-wj-text">Contact</a>
+        <div className="mx-auto max-w-5xl px-4 py-4">
+          <div className="flex flex-col items-center gap-1 text-xs text-wj-muted md:flex-row md:justify-between">
+            <span>© 2026 WishJar · Yaratıcı: <strong className="text-wj-text">Selçuk Kıvrak</strong> · Yapay Zeka ile Oluşturuldu</span>
+            <div className="flex gap-4">
+              <a href="/privacy" className="hover:text-wj-text">Gizlilik</a>
+              <a href="/terms" className="hover:text-wj-text">Koşullar</a>
+              <a href="mailto:slckkvrk@gmail.com" className="hover:text-wj-text">İletişim</a>
+            </div>
           </div>
         </div>
       </footer>

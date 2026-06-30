@@ -9,7 +9,6 @@ import { sanitizeText } from "@/lib/validate";
 const categories = ["New Home","Wedding","Baby","Birthday","Travel","Education","Gaming","Startup","Charity","Other"];
 
 export default function NewJarPage() {
-  const [userId, setUserId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("New Home");
   const [goalAmount, setGoalAmount] = useState("");
@@ -19,26 +18,30 @@ export default function NewJarPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) { window.location.href = "/login"; return; }
-      setUserId(data.user.id);
+      if (!data.user) window.location.href = "/login";
     });
   }, []);
 
   const handleCreate = async () => {
-    if (!userId) { setMessage("You must be logged in."); return; }
     if (!title.trim()) { setMessage("Jar name is required."); return; }
     setSaving(true);
     setMessage("");
-    const { error } = await supabase.from("jars").insert({
-      user_id: userId,
-      title: sanitizeText(title, 200),
-      category,
-      goal_amount: goalAmount ? Number(goalAmount) : null,
-      description: sanitizeText(description, 1000) || null,
-    });
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) { window.location.href = "/login"; return; }
+    const { data: inserted, error } = await supabase
+      .from("jars")
+      .insert({
+        user_id: userData.user.id,
+        title: sanitizeText(title, 200),
+        category,
+        goal_amount: goalAmount ? Number(goalAmount) : null,
+        description: sanitizeText(description, 1000) || null,
+      })
+      .select("id")
+      .single();
     setSaving(false);
     if (error) { setMessage(error.message); return; }
-    window.location.href = "/dashboard";
+    window.location.href = inserted ? `/jars/${inserted.id}` : "/dashboard";
   };
 
   const inputCls = "w-full rounded-xl border border-wj-card-border bg-wj-card px-3 py-2.5 text-sm outline-none focus:border-wj-plum text-wj-text";

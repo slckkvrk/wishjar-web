@@ -41,7 +41,7 @@ export default function SiteHeader({ activeTab }: Props) {
     <header className="hidden md:block bg-wj-plum border-b border-wj-plum-mid">
       <div className="mx-auto flex h-11 max-w-5xl items-center justify-between px-4">
         <div className="flex items-center gap-4">
-          <a href="/" className="flex items-center gap-1.5">
+          <a href={username ? "/dashboard" : "/"} className="flex items-center gap-1.5">
             <svg viewBox="0 0 64 64" className="h-5 w-5 shrink-0" aria-hidden="true">
               <rect x="18" y="6" width="28" height="8" rx="2" fill="#EDD98A"/>
               <rect x="12" y="16" width="40" height="42" rx="6" fill="#6B2D40"/>

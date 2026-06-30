@@ -88,22 +88,33 @@ export default function DashboardPage() {
               {username?.charAt(0).toUpperCase() ?? "?"}
             </div>
             <div>
-              <h1 className="text-xl font-bold text-wj-text">Hi, {username} 👋</h1>
+              <h1 className="text-xl font-bold text-wj-text">Hi, {username ?? "there"} 👋</h1>
               <p className="text-xs text-wj-muted">
-                {totalWishes} {totalWishes === 1 ? "wish" : "wishes"} are growing today
+                {totalWishes} {totalWishes === 1 ? "wish" : "wishes"} growing today
               </p>
             </div>
           </div>
-          <a href="/feed"
-            className="w-10 h-10 rounded-xl flex items-center justify-center relative bg-wj-card border border-wj-card-border"
-            aria-label="Community Feed"
-          >
-            <svg viewBox="0 0 24 24" className="w-5 h-5 text-wj-text" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-            </svg>
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-wj-plum-mid"></span>
-          </a>
+          <div className="flex items-center gap-2">
+            <a href="/settings/profile"
+              className="w-9 h-9 rounded-xl flex items-center justify-center bg-wj-card border border-wj-card-border"
+              aria-label="Settings"
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 text-wj-text" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+              </svg>
+            </a>
+            <a href="/feed"
+              className="w-9 h-9 rounded-xl flex items-center justify-center relative bg-wj-card border border-wj-card-border"
+              aria-label="Community Feed"
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 text-wj-text" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-wj-plum-mid"></span>
+            </a>
+          </div>
         </div>
 
         {/* Quick action buttons */}
@@ -118,9 +129,11 @@ export default function DashboardPage() {
               🫙 Limit Reached
             </span>
           )}
-          <a href={username ? `/u/${username}` : "#"}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold text-wj-text bg-wj-card border border-wj-card-border">
-            👥 Share Profile
+          <a
+            href={username ? `/u/${username}` : "/settings/profile"}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold text-wj-text bg-wj-card border border-wj-card-border"
+          >
+            👤 My Profile
           </a>
         </div>
 
@@ -142,25 +155,66 @@ export default function DashboardPage() {
       {/* Desktop header */}
       <div className="hidden md:flex mx-auto max-w-5xl px-4 pt-6 pb-2 items-center justify-between">
         <h1 className="text-xl font-bold text-wj-text">Your Timeline</h1>
-        {!atLimit && (
-          <a href="/jars/new" className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-wj-plum">
-            + New jar
-          </a>
-        )}
+        <div className="flex items-center gap-3">
+          {/* Tab pills desktop */}
+          <div className="flex items-center rounded-2xl p-1 gap-1 bg-wj-card border border-wj-card-border">
+            {(["all", "jars", "complete"] as Tab[]).map((t) => (
+              <button key={t} onClick={() => setTab(t)}
+                className="px-4 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors"
+                style={{
+                  backgroundColor: tab === t ? "#3D1A24" : "transparent",
+                  color: tab === t ? "white" : "#9B7E6A",
+                }}>
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
+          </div>
+          {!atLimit && (
+            <a href="/jars/new" className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-wj-plum">
+              + New jar
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Jar cards */}
       <div className="px-4 md:mx-auto md:max-w-5xl">
-        {filteredJars.length === 0 ? (
+        {jars.length === 0 ? (
+          /* Onboarding banner — shown when user has zero jars */
+          <div className="rounded-2xl border-2 border-wj-gold bg-wj-card mt-2 mb-4 overflow-hidden" style={{ boxShadow: "var(--wj-shadow)" }}>
+            <div className="px-5 pt-5 pb-4 border-b border-wj-card-border" style={{ background: "#F0D080" }}>
+              <h2 className="text-xl font-bold text-wj-text mb-1">Welcome to WishJar 🫙</h2>
+              <p className="text-sm text-wj-text/80">Create a jar for a goal, add wishes inside, and share it with people who care.</p>
+            </div>
+            <div className="px-5 py-4">
+              <div className="grid gap-3 md:grid-cols-3 mb-5">
+                {[
+                  { step: "1", title: "Create your first jar", desc: "Name it after your goal — a new home, a wedding, a trip. Pick a category and set a target amount." },
+                  { step: "2", title: "Add wish items", desc: "List the things you need. Add names, prices, and links. Your jar will track the total automatically." },
+                  { step: "3", title: "Share your jar", desc: "Copy your profile link and send it to friends or family. They can see your jar and cheer you on." },
+                ].map((item) => (
+                  <div key={item.step} className="flex gap-3">
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white bg-wj-plum shrink-0 mt-0.5">
+                      {item.step}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-wj-text">{item.title}</p>
+                      <p className="text-xs text-wj-muted leading-5 mt-0.5">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <a href="/jars/new"
+                className="inline-block rounded-2xl bg-wj-plum px-6 py-3 text-sm font-bold text-white hover:bg-wj-plum-mid">
+                Create Jar →
+              </a>
+            </div>
+          </div>
+        ) : filteredJars.length === 0 ? (
           <div className="py-12 text-center">
             <p className="text-sm text-wj-muted mb-4">
-              {tab === "complete" ? "No completed jars yet." : "You haven't created any jars yet."}
+              {tab === "complete" ? "No completed jars yet." : "No jars in this view."}
             </p>
-            {!atLimit && tab !== "complete" && (
-              <a href="/jars/new" className="inline-block px-6 py-3 rounded-2xl text-sm font-bold text-white bg-wj-plum">
-                Create your first jar
-              </a>
-            )}
           </div>
         ) : (
           filteredJars.map((jar) => (
@@ -176,7 +230,7 @@ export default function DashboardPage() {
 
       <footer className="hidden md:block mt-10 border-t border-wj-card-border bg-wj-card">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 text-xs text-wj-muted">
-          <span>© 2026 WishJar</span>
+          <span>© 2026 WishJar · Created by <strong className="text-wj-text">Selçuk Kıvrak</strong> · Built with AI assistance</span>
           <div className="flex gap-4">
             <a href="/privacy" className="hover:text-wj-text">Privacy</a>
             <a href="/terms" className="hover:text-wj-text">Terms</a>
