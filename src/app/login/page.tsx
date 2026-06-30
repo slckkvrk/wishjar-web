@@ -24,10 +24,12 @@ export default function LoginPage() {
     if (!email || !password) { setMessage("Enter email and password."); return; }
     setLoading(true);
     setMessage("");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) { setMessage("Wrong email or password."); return; }
-    window.location.href = "/dashboard";
+    const { data: profile } = await supabase
+      .from("profiles").select("username").eq("id", data.user!.id).single();
+    window.location.href = profile?.username ? "/dashboard" : "/setup/username";
   };
 
   return (

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { requireUsername } from "@/lib/requireUsername";
 import SiteHeader from "@/components/SiteHeader";
 import JarIllustration from "@/components/JarIllustration";
 import ProgressBar from "@/components/ProgressBar";
@@ -31,8 +32,8 @@ export default function JarDetailPage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) { window.location.href = "/login"; return; }
+      const auth = await requireUsername();
+      if (!auth) return;
       const { data, error } = await supabase
         .from("jars").select("id, title, description, category, goal_amount, created_at, user_id, status")
         .eq("id", jarId).single();
@@ -42,7 +43,7 @@ export default function JarDetailPage() {
         return;
       }
       setJar(data);
-      setIsOwner(data.user_id === userData.user.id);
+      setIsOwner(data.user_id === auth.userId);
       const { data: profile } = await supabase.from("profiles").select("username").eq("id", data.user_id).single();
       setOwnerUsername(profile?.username ?? null);
       const { data: wishesData } = await supabase

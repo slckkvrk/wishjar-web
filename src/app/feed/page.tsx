@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { requireUsername } from "@/lib/requireUsername";
 import { timeAgo } from "@/lib/time";
 import SiteHeader from "@/components/SiteHeader";
 import JarCard from "@/components/JarCard";
@@ -26,14 +27,14 @@ export default function FeedPage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) { window.location.href = "/login"; return; }
+      const auth = await requireUsername();
+      if (!auth) return;
 
       const { data: allJars } = await supabase
         .from("jars")
         .select("id, title, description, category, goal_amount, user_id")
         .eq("status", "active")
-        .neq("user_id", userData.user.id)
+        .neq("user_id", auth.userId)
         .order("created_at", { ascending: false })
         .limit(20);
 

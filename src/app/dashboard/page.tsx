@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { requireUsername } from "@/lib/requireUsername";
 import SiteHeader from "@/components/SiteHeader";
 import JarCard from "@/components/JarCard";
 import BottomNav from "@/components/BottomNav";
@@ -9,7 +10,7 @@ import BottomNav from "@/components/BottomNav";
 type Jar = {
   id: string; title: string; description: string | null;
   category: string; goal_amount: number | null;
-  status: string; created_at: string;
+  status: string; created_at: string; completed_at: string | null;
 };
 type Tab = "all" | "jars" | "complete";
 const MAX_JARS = 3;
@@ -24,17 +25,14 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) { window.location.href = "/login"; return; }
-
-      const { data: profile } = await supabase
-        .from("profiles").select("username").eq("id", userData.user.id).single();
-      setUsername(profile?.username ?? null);
+      const auth = await requireUsername();
+      if (!auth) return;
+      setUsername(auth.username);
 
       const { data: jarsData } = await supabase
         .from("jars")
-        .select("id, title, description, category, goal_amount, status, created_at")
-        .eq("user_id", userData.user.id)
+        .select("id, title, description, category, goal_amount, status, created_at, completed_at")
+        .eq("user_id", auth.userId)
         .order("created_at", { ascending: false });
 
       const jarsArr = jarsData ?? [];
@@ -95,7 +93,6 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {/* Settings — gear icon → /settings/profile */}
             <a href="/settings"
               className="w-9 h-9 rounded-xl flex items-center justify-center bg-wj-card border border-wj-card-border"
               aria-label="Settings"
@@ -106,7 +103,6 @@ export default function DashboardPage() {
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
               </svg>
             </a>
-            {/* Bell → feed */}
             <a href="/feed"
               className="w-9 h-9 rounded-xl flex items-center justify-center relative bg-wj-card border border-wj-card-border"
               aria-label="Community Feed"
@@ -160,7 +156,6 @@ export default function DashboardPage() {
       <div className="hidden md:flex mx-auto max-w-5xl px-4 pt-6 pb-2 items-center justify-between">
         <h1 className="text-xl font-bold text-wj-text">Your Timeline</h1>
         <div className="flex items-center gap-3">
-          {/* Tab pills desktop */}
           <div className="flex items-center rounded-2xl p-1 gap-1 bg-wj-card border border-wj-card-border">
             {(["all", "jars", "complete"] as Tab[]).map((t) => (
               <button key={t} onClick={() => setTab(t)}
@@ -184,7 +179,6 @@ export default function DashboardPage() {
       {/* Jar cards */}
       <div className="px-4 md:mx-auto md:max-w-5xl">
         {jars.length === 0 ? (
-          /* Onboarding banner — shown when user has zero jars */
           <div className="rounded-2xl border-2 border-wj-gold bg-wj-card mt-2 mb-4 overflow-hidden" style={{ boxShadow: "var(--wj-shadow)" }}>
             <div className="px-5 pt-5 pb-4 border-b border-wj-card-border" style={{ background: "#F0D080" }}>
               <h2 className="text-xl font-bold text-wj-text mb-1">Welcome to WishJar 🫙</h2>

@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { requireUsername } from "@/lib/requireUsername";
+import { completedLabel } from "@/lib/time";
 import SiteHeader from "@/components/SiteHeader";
 import BottomNav from "@/components/BottomNav";
 
 type Jar = {
   id: string; title: string; description: string | null;
   category: string; goal_amount: number | null;
-  status: string; created_at: string;
+  status: string; created_at: string; completed_at: string | null;
 };
 const MAX_JARS = 3;
 
@@ -18,12 +20,12 @@ export default function JarsPage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) { window.location.href = "/login"; return; }
+      const auth = await requireUsername();
+      if (!auth) return;
       const { data } = await supabase
         .from("jars")
-        .select("id, title, description, category, goal_amount, status, created_at")
-        .eq("user_id", userData.user.id)
+        .select("id, title, description, category, goal_amount, status, created_at, completed_at")
+        .eq("user_id", auth.userId)
         .order("created_at", { ascending: false });
       setJars(data ?? []);
       setLoading(false);
@@ -98,7 +100,9 @@ export default function JarsPage() {
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="text-base font-bold text-wj-text">{jar.title}</span>
                       {jar.status === "completed" && (
-                        <span className="text-xs px-2 py-0.5 rounded-full font-semibold text-white bg-wj-gold">Done</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full font-semibold text-white bg-wj-gold">
+                          {completedLabel(jar.completed_at)}
+                        </span>
                       )}
                     </div>
                     <div className="flex items-center gap-2">

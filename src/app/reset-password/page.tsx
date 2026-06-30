@@ -14,26 +14,31 @@ function WishJarLogo() {
   );
 }
 
+type Status = "checking" | "ready" | "invalid" | "done";
+
 export default function ResetPasswordPage() {
-  const [ready, setReady] = useState(false);
+  const [status, setStatus] = useState<Status>("checking");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
-        setReady(true);
+      if (event === "PASSWORD_RECOVERY") {
+        setStatus("ready");
       }
     });
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true);
-    });
+    // If PASSWORD_RECOVERY hasn't fired within 1.5s, the link is invalid or expired.
+    const timer = setTimeout(() => {
+      setStatus((s) => s === "checking" ? "invalid" : s);
+    }, 1500);
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   const handleReset = async () => {
@@ -45,7 +50,7 @@ export default function ResetPasswordPage() {
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
     if (error) { setMessage(error.message); return; }
-    setDone(true);
+    setStatus("done");
     setTimeout(() => { window.location.href = "/dashboard"; }, 2000);
   };
 
@@ -67,17 +72,40 @@ export default function ResetPasswordPage() {
             <p className="mt-0.5 text-xs text-wj-muted">Choose a strong password.</p>
           </div>
 
-          {done ? (
+          {status === "checking" && (
+            <div className="px-5 py-6 text-center">
+              <p className="text-sm text-wj-muted">Verifying link…</p>
+            </div>
+          )}
+
+          {status === "invalid" && (
+            <div className="px-5 py-6 text-center">
+              <p className="text-2xl mb-3">🔒</p>
+              <p className="text-sm font-semibold text-wj-text mb-1">Link invalid or expired</p>
+              <p className="text-xs text-wj-muted mb-5">
+                This password reset link is invalid or has expired.
+              </p>
+              <div className="flex flex-col gap-2">
+                <a href="/forgot-password"
+                  className="inline-block rounded-xl bg-wj-plum px-5 py-2.5 text-sm font-bold text-white hover:bg-wj-plum-mid">
+                  Request a new link
+                </a>
+                <a href="/login" className="text-xs text-wj-plum hover:underline mt-1">
+                  Back to sign in
+                </a>
+              </div>
+            </div>
+          )}
+
+          {status === "done" && (
             <div className="px-5 py-6 text-center">
               <p className="text-2xl mb-3">✅</p>
               <p className="text-sm font-semibold text-wj-text">Password updated!</p>
               <p className="text-xs text-wj-muted mt-1">Redirecting…</p>
             </div>
-          ) : !ready ? (
-            <div className="px-5 py-6 text-center">
-              <p className="text-sm text-wj-muted">Verifying link…</p>
-            </div>
-          ) : (
+          )}
+
+          {status === "ready" && (
             <div className="px-5 py-5 space-y-4">
               <div>
                 <label className="mb-1 block text-xs font-semibold text-wj-text">New password</label>

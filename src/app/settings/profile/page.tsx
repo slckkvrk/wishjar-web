@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { requireUsername } from "@/lib/requireUsername";
 import SiteHeader from "@/components/SiteHeader";
 import BottomNav from "@/components/BottomNav";
 import { sanitizeText } from "@/lib/validate";
@@ -18,11 +19,11 @@ export default function EditProfilePage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) { window.location.href = "/login"; return; }
-      setUserId(userData.user.id);
+      const auth = await requireUsername();
+      if (!auth) return;
+      setUserId(auth.userId);
       const { data: profile } = await supabase
-        .from("profiles").select("username, bio").eq("id", userData.user.id).single();
+        .from("profiles").select("username, bio").eq("id", auth.userId).single();
       if (profile) {
         setUsername(profile.username ?? "");
         setSavedUsername(profile.username ?? "");

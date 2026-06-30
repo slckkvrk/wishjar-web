@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { requireUsername } from "@/lib/requireUsername";
 import SiteHeader from "@/components/SiteHeader";
 import BottomNav from "@/components/BottomNav";
 import { isValidUrl, sanitizeText, isValidPrice } from "@/lib/validate";
@@ -22,11 +23,11 @@ export default function NewWishPage() {
 
   useEffect(() => {
     const checkOwnership = async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) { window.location.href = "/login"; return; }
+      const auth = await requireUsername();
+      if (!auth) return;
       const { data: jar } = await supabase
         .from("jars").select("user_id").eq("id", jarId).single();
-      if (!jar || jar.user_id !== userData.user.id) {
+      if (!jar || jar.user_id !== auth.userId) {
         window.location.href = `/jars/${jarId}`;
         return;
       }

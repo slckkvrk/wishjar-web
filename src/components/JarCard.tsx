@@ -1,6 +1,7 @@
 import AvatarCircle from "./AvatarCircle";
 import ProgressBar from "./ProgressBar";
 import JarIllustration from "./JarIllustration";
+import { completedLabel } from "@/lib/time";
 
 type JarCardProps = {
   jar: {
@@ -11,6 +12,7 @@ type JarCardProps = {
     goal_amount: number | null;
     status: string;
     username: string;
+    completed_at?: string | null;
   };
   totalWishValue?: number;
   isOwn?: boolean;
@@ -45,7 +47,7 @@ export default function JarCard({ jar, totalWishValue = 0, isOwn }: JarCardProps
       {/* Label row */}
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-medium text-wj-muted">
-          {isCompleted ? "Completed today" : "Jar update"}
+          {isCompleted ? completedLabel(jar.completed_at) : "Jar update"}
         </span>
         <span className="text-wj-muted text-lg leading-none select-none">•••</span>
       </div>

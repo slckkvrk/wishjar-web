@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { requireUsername } from "@/lib/requireUsername";
 import SiteHeader from "@/components/SiteHeader";
 import BottomNav from "@/components/BottomNav";
 import { isValidUrl, sanitizeText, isValidPrice } from "@/lib/validate";
@@ -23,13 +24,13 @@ export default function EditWishPage() {
 
   useEffect(() => {
     const loadWish = async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) { window.location.href = "/login"; return; }
+      const auth = await requireUsername();
+      if (!auth) return;
       const { data, error } = await supabase
         .from("wishes").select("id, user_id, title, description, product_url, price")
         .eq("id", wishId).single();
       if (error || !data) { setMessage("Wish item not found."); setLoading(false); return; }
-      if (data.user_id !== userData.user.id) { window.location.href = `/jars/${jarId}`; return; }
+      if (data.user_id !== auth.userId) { window.location.href = `/jars/${jarId}`; return; }
       setTitle(data.title);
       setProductUrl(data.product_url ?? "");
       setPrice(data.price !== null ? String(data.price) : "");

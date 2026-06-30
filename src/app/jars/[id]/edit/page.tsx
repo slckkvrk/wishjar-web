@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { requireUsername } from "@/lib/requireUsername";
 import SiteHeader from "@/components/SiteHeader";
 import BottomNav from "@/components/BottomNav";
 import { sanitizeText } from "@/lib/validate";
@@ -26,13 +27,13 @@ export default function EditJarPage() {
 
   useEffect(() => {
     const loadJar = async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) { window.location.href = "/login"; return; }
+      const auth = await requireUsername();
+      if (!auth) return;
       const { data, error } = await supabase
         .from("jars").select("id, user_id, title, description, category, goal_amount, status")
         .eq("id", jarId).single();
       if (error || !data) { setMessage("Jar not found."); setLoading(false); return; }
-      if (data.user_id !== userData.user.id) { window.location.href = `/jars/${jarId}`; return; }
+      if (data.user_id !== auth.userId) { window.location.href = `/jars/${jarId}`; return; }
       setTitle(data.title);
       setCategory(data.category);
       setGoalAmount(data.goal_amount ? String(data.goal_amount) : "");
@@ -62,7 +63,7 @@ export default function EditJarPage() {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) return;
     const { data: profile } = await supabase.from("profiles").select("username").eq("id", userData.user.id).single();
-    const { error } = await supabase.from("jars").update({ status: "completed" }).eq("id", jarId);
+    const { error } = await supabase.from("jars").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", jarId);
     if (error) { setMessage(error.message); setCompleting(false); return; }
     await supabase.channel("jar-completions").send({
       type: "broadcast", event: "jar_completed",

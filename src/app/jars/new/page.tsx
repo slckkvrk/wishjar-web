@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { requireUsername } from "@/lib/requireUsername";
 import SiteHeader from "@/components/SiteHeader";
 import BottomNav from "@/components/BottomNav";
 import { sanitizeText } from "@/lib/validate";
@@ -31,13 +32,13 @@ export default function NewJarPage() {
 
   useEffect(() => {
     const check = async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) { window.location.href = "/login"; return; }
+      const auth = await requireUsername();
+      if (!auth) return;
 
       const { count } = await supabase
         .from("jars")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", userData.user.id)
+        .eq("user_id", auth.userId)
         .eq("status", "active");
 
       if ((count ?? 0) >= MAX_JARS) setAtLimit(true);
@@ -51,14 +52,14 @@ export default function NewJarPage() {
     setSaving(true);
     setMessage("");
 
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) { window.location.href = "/login"; return; }
+    const auth = await requireUsername();
+    if (!auth) return;
 
     // Re-check limit at submit time
     const { count } = await supabase
       .from("jars")
       .select("id", { count: "exact", head: true })
-      .eq("user_id", userData.user.id)
+      .eq("user_id", auth.userId)
       .eq("status", "active");
 
     if ((count ?? 0) >= MAX_JARS) {
@@ -70,7 +71,7 @@ export default function NewJarPage() {
     const { data: inserted, error } = await supabase
       .from("jars")
       .insert({
-        user_id: userData.user.id,
+        user_id: auth.userId,
         title: sanitizeText(title, 200),
         category,
         goal_amount: goalAmount ? Number(goalAmount) : null,
