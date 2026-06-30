@@ -24,16 +24,28 @@ export default function ResetPasswordPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    // Supabase PKCE recovery links arrive as ?code=xxx
+    // Implicit flow links arrive with #access_token=...&type=recovery in the hash
+    const hasCode = new URLSearchParams(window.location.search).has("code");
+    const hasRecoveryHash = window.location.hash.includes("type=recovery");
+
+    if (!hasCode && !hasRecoveryHash) {
+      // No recovery token in URL — direct navigation or expired link
+      setStatus("invalid");
+      return;
+    }
+
+    // Recovery URL detected — wait for Supabase to exchange the code and fire the event.
+    // PKCE exchange is async (network call), so give it 10s before giving up.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
         setStatus("ready");
       }
     });
 
-    // If PASSWORD_RECOVERY hasn't fired within 1.5s, the link is invalid or expired.
     const timer = setTimeout(() => {
       setStatus((s) => s === "checking" ? "invalid" : s);
-    }, 1500);
+    }, 10000);
 
     return () => {
       subscription.unsubscribe();
