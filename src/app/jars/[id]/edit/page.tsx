@@ -29,9 +29,10 @@ export default function EditJarPage() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) { window.location.href = "/login"; return; }
       const { data, error } = await supabase
-        .from("jars").select("id, title, description, category, goal_amount, status")
+        .from("jars").select("id, user_id, title, description, category, goal_amount, status")
         .eq("id", jarId).single();
       if (error || !data) { setMessage("Jar not found."); setLoading(false); return; }
+      if (data.user_id !== userData.user.id) { window.location.href = `/jars/${jarId}`; return; }
       setTitle(data.title);
       setCategory(data.category);
       setGoalAmount(data.goal_amount ? String(data.goal_amount) : "");

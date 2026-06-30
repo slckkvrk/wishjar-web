@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import SiteHeader from "@/components/SiteHeader";
@@ -18,6 +18,22 @@ export default function NewWishPage() {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const checkOwnership = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) { window.location.href = "/login"; return; }
+      const { data: jar } = await supabase
+        .from("jars").select("user_id").eq("id", jarId).single();
+      if (!jar || jar.user_id !== userData.user.id) {
+        window.location.href = `/jars/${jarId}`;
+        return;
+      }
+      setChecking(false);
+    };
+    checkOwnership();
+  }, [jarId]);
 
   const handleCreateWish = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -58,6 +74,13 @@ export default function NewWishPage() {
 
   const inputCls = "w-full rounded-xl border border-wj-card-border bg-wj-card px-3 py-2.5 text-sm outline-none focus:border-wj-plum text-wj-text";
   const labelCls = "mb-1 block text-xs font-semibold text-wj-text";
+
+  if (checking) return (
+    <div className="min-h-screen bg-wj-cream">
+      <SiteHeader activeTab="home" />
+      <div className="flex items-center justify-center pt-20 text-sm text-wj-muted">Loading…</div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-wj-cream pb-20 md:pb-0">

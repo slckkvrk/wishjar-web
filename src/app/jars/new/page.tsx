@@ -17,6 +17,8 @@ const categoryEmoji: Record<string, string> = {
   "Charity": "❤️", "Other": "🫙",
 };
 
+const MAX_JARS = 3;
+
 export default function NewJarPage() {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("New Home");
@@ -24,11 +26,24 @@ export default function NewJarPage() {
   const [description, setDescription] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [atLimit, setAtLimit] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) window.location.href = "/login";
-    });
+    const check = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) { window.location.href = "/login"; return; }
+
+      const { count } = await supabase
+        .from("jars")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userData.user.id)
+        .eq("status", "active");
+
+      if ((count ?? 0) >= MAX_JARS) setAtLimit(true);
+      setLoading(false);
+    };
+    check();
   }, []);
 
   const handleCreate = async () => {
@@ -38,6 +53,19 @@ export default function NewJarPage() {
 
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) { window.location.href = "/login"; return; }
+
+    // Re-check limit at submit time
+    const { count } = await supabase
+      .from("jars")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userData.user.id)
+      .eq("status", "active");
+
+    if ((count ?? 0) >= MAX_JARS) {
+      setAtLimit(true);
+      setSaving(false);
+      return;
+    }
 
     const { data: inserted, error } = await supabase
       .from("jars")
@@ -69,12 +97,40 @@ export default function NewJarPage() {
   const inputCls = "w-full rounded-xl border border-wj-card-border bg-wj-card px-3 py-2.5 text-sm outline-none focus:border-wj-plum text-wj-text placeholder:text-wj-muted";
   const labelCls = "mb-1 block text-xs font-semibold text-wj-text";
 
+  if (loading) return (
+    <div className="min-h-screen bg-wj-cream">
+      <SiteHeader activeTab="home" />
+      <div className="flex items-center justify-center pt-20 text-sm text-wj-muted">Loading…</div>
+    </div>
+  );
+
+  if (atLimit) return (
+    <div className="min-h-screen bg-wj-cream pb-20 md:pb-0">
+      <SiteHeader activeTab="home" />
+      <div className="mx-auto max-w-xl px-4 py-6">
+        <div className="flex items-center gap-3 mb-5 text-sm">
+          <a href="/dashboard" className="text-wj-muted hover:text-wj-text">← Home</a>
+        </div>
+        <div className="rounded-2xl bg-wj-card border border-wj-card-border p-6 text-center" style={{ boxShadow: "var(--wj-shadow)" }}>
+          <p className="text-2xl mb-3">🫙</p>
+          <h1 className="text-base font-bold text-wj-text mb-2">Jar limit reached</h1>
+          <p className="text-sm text-wj-muted mb-5">
+            You can have up to {MAX_JARS} active jars. Complete or delete one to create a new jar.
+          </p>
+          <a href="/jars" className="inline-block rounded-xl bg-wj-plum px-5 py-2.5 text-sm font-bold text-white hover:bg-wj-plum-mid">
+            View my jars
+          </a>
+        </div>
+      </div>
+      <BottomNav active="create" />
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-wj-cream pb-20 md:pb-0">
       <SiteHeader activeTab="home" />
 
       <div className="mx-auto max-w-xl px-4 py-6">
-        {/* Header */}
         <div className="mb-5">
           <div className="flex items-center gap-3 mb-3 text-sm">
             <a href="/dashboard" className="text-wj-muted hover:text-wj-text">← Home</a>
@@ -82,18 +138,12 @@ export default function NewJarPage() {
             <a href="/jars" className="text-wj-muted hover:text-wj-text">My Jars</a>
           </div>
           <h1 className="text-2xl font-bold text-wj-text">Create a new jar</h1>
-          <p className="text-sm text-wj-muted mt-1">
-            Name your goal, pick a category, and add wishes.
-          </p>
+          <p className="text-sm text-wj-muted mt-1">Name your goal, pick a category, and add wishes.</p>
         </div>
 
         <div className="rounded-2xl bg-wj-card border border-wj-card-border p-5 space-y-5" style={{ boxShadow: "var(--wj-shadow)" }}>
-
-          {/* Jar name */}
           <div>
-            <label className={labelCls}>
-              Jar name <span className="text-red-500">*</span>
-            </label>
+            <label className={labelCls}>Jar name <span className="text-red-500">*</span></label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -102,10 +152,8 @@ export default function NewJarPage() {
               className={inputCls}
               autoFocus
             />
-            <p className="mt-1 text-xs text-wj-muted">Give it a name.</p>
           </div>
 
-          {/* Category */}
           <div>
             <label className={labelCls}>Category</label>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -128,11 +176,8 @@ export default function NewJarPage() {
             </div>
           </div>
 
-          {/* Goal amount */}
           <div>
-            <label className={labelCls}>
-              Goal amount <span className="text-wj-muted font-normal">(optional)</span>
-            </label>
+            <label className={labelCls}>Goal amount <span className="text-wj-muted font-normal">(optional)</span></label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-wj-muted">$</span>
               <input
@@ -148,11 +193,8 @@ export default function NewJarPage() {
             <p className="mt-1 text-xs text-wj-muted">Set a target amount.</p>
           </div>
 
-          {/* Description */}
           <div>
-            <label className={labelCls}>
-              Description <span className="text-wj-muted font-normal">(optional)</span>
-            </label>
+            <label className={labelCls}>Description <span className="text-wj-muted font-normal">(optional)</span></label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -164,15 +206,12 @@ export default function NewJarPage() {
             <p className="mt-1 text-right text-xs text-wj-muted">{description.length}/1000</p>
           </div>
 
-          {/* Error */}
           {message && (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-              <p className="text-xs font-semibold text-red-700 mb-0.5">Error</p>
               <p className="text-xs text-red-600">{message}</p>
             </div>
           )}
 
-          {/* Actions */}
           <div className="flex items-center gap-3 border-t border-wj-card-border pt-4">
             <button
               onClick={handleCreate}
