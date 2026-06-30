@@ -11,7 +11,7 @@ type Jar = {
   category: string; goal_amount: number | null;
   status: string; created_at: string;
 };
-type Tab = "all" | "jars" | "posts" | "complete";
+type Tab = "all" | "jars" | "complete";
 const MAX_JARS = 3;
 
 export default function DashboardPage() {
@@ -126,7 +126,7 @@ export default function DashboardPage() {
 
         {/* Tab pills */}
         <div className="flex items-center rounded-2xl p-1 gap-1 bg-wj-card border border-wj-card-border">
-          {(["all", "jars", "posts", "complete"] as Tab[]).map((t) => (
+          {(["all", "jars", "complete"] as Tab[]).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className="flex-1 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors"
               style={{
@@ -151,14 +151,7 @@ export default function DashboardPage() {
 
       {/* Jar cards */}
       <div className="px-4 md:mx-auto md:max-w-5xl">
-        {tab === "posts" ? (
-          <div className="py-12 text-center">
-            <p className="text-sm text-wj-muted">
-              Posts feed coming soon — check the{" "}
-              <a href="/feed" className="underline text-wj-plum">Community Feed</a>
-            </p>
-          </div>
-        ) : filteredJars.length === 0 ? (
+        {filteredJars.length === 0 ? (
           <div className="py-12 text-center">
             <p className="text-sm text-wj-muted mb-4">
               {tab === "complete" ? "No completed jars yet." : "You haven't created any jars yet."}
