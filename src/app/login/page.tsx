@@ -21,12 +21,12 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
 
   const handleLogin = async () => {
-    if (!email || !password) { setMessage("Please enter your email and password."); return; }
+    if (!email || !password) { setMessage("Enter email and password."); return; }
     setLoading(true);
     setMessage("");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) { setMessage("Incorrect email or password."); return; }
+    if (error) { setMessage("Wrong email or password."); return; }
     window.location.href = "/dashboard";
   };
 
@@ -75,8 +75,8 @@ export default function LoginPage() {
           </div>
 
           <div className="border-t border-wj-card-border bg-wj-cream px-5 py-3 text-xs text-wj-muted">
-            Don&apos;t have an account?{" "}
-            <a href="/signup" className="font-semibold text-wj-plum hover:underline">Create one free</a>
+            No account?{" "}
+            <a href="/signup" className="font-semibold text-wj-plum hover:underline">Sign up free</a>
           </div>
         </div>
 

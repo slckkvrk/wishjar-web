@@ -43,8 +43,7 @@ export default function Home() {
                 Your wishes, collected.<br />Your community, connected.
               </h1>
               <p className="mb-6 text-sm leading-6 text-wj-muted">
-                WishJar lets you build a wishlist for any life goal — a new home, a wedding, a baby, education, travel.
-                Share it with people who care, and let them support you when the time is right.
+                Build a wishlist for any goal. Share it with people who care.
               </p>
               <div className="flex items-center gap-3">
                 <a href="/signup"
@@ -92,12 +91,12 @@ export default function Home() {
 
       {/* How it works */}
       <div className="mx-auto max-w-5xl px-4 py-12">
-        <h2 className="mb-8 text-center text-lg font-bold text-wj-text">Nasıl Çalışır?</h2>
+        <h2 className="mb-8 text-center text-lg font-bold text-wj-text">How it works</h2>
         <div className="grid gap-6 md:grid-cols-3">
           {[
-            { step: "1", title: "Jar Oluştur", desc: "Hayalindeki hedef için bir jar yarat. Ev, düğün, bebek, seyahat — her şey olabilir." },
-            { step: "2", title: "Dilekleri Ekle", desc: "İstediğin ürünleri, fiyatlarını ve linklerini jar'a ekle. Hedef tutarını belirle." },
-            { step: "3", title: "Topluluğunla Paylaş", desc: "Jar linkini arkadaşlarınla paylaş. Onlar senin hedefini görsün ve desteklesin." },
+            { step: "1", title: "Create", desc: "Start a jar for any goal — a home, a wedding, a trip." },
+            { step: "2", title: "Add wishes", desc: "Add items with prices and links. Set a target." },
+            { step: "3", title: "Share", desc: "Send your jar link to friends. Let them support you." },
           ].map((item) => (
             <div key={item.step} className="rounded-2xl bg-wj-card border border-wj-card-border p-5 text-center" style={{ boxShadow: "var(--wj-shadow)" }}>
               <div className="mx-auto mb-3 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold text-white bg-wj-plum">
@@ -112,7 +111,7 @@ export default function Home() {
 
       {/* Categories */}
       <div className="mx-auto max-w-5xl px-4 pb-10">
-        <h2 className="mb-5 text-base font-semibold text-wj-text">Popüler Kategoriler</h2>
+        <h2 className="mb-5 text-base font-semibold text-wj-text">Categories</h2>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
           {["New Home", "Wedding", "Baby", "Travel", "Education", "Birthday", "Gaming", "Startup", "Charity", "Other"].map((cat) => (
             <div key={cat}
@@ -127,12 +126,12 @@ export default function Home() {
       {/* CTA strip */}
       <div className="border-t border-wj-card-border" style={{ background: "#3D1A24" }}>
         <div className="mx-auto max-w-5xl px-4 py-10 text-center">
-          <h2 className="text-xl font-bold text-white mb-3">Jar'ını oluşturmaya hazır mısın?</h2>
-          <p className="text-sm text-white/70 mb-6">Ücretsiz. Kredi kartı gerekmez.</p>
+          <h2 className="text-xl font-bold text-white mb-3">Ready to start?</h2>
+          <p className="text-sm text-white/70 mb-6">Free. No card needed.</p>
           <a href="/signup"
             className="inline-block rounded-2xl px-8 py-3 text-sm font-bold text-wj-plum hover:opacity-80"
             style={{ background: "#EDD98A" }}>
-            Ücretsiz Başla
+            Get started
           </a>
         </div>
       </div>
@@ -141,11 +140,11 @@ export default function Home() {
       <footer className="border-t border-wj-card-border bg-wj-card">
         <div className="mx-auto max-w-5xl px-4 py-4">
           <div className="flex flex-col items-center gap-1 text-xs text-wj-muted md:flex-row md:justify-between">
-            <span>© 2026 WishJar · Yaratıcı: <strong className="text-wj-text">Selçuk Kıvrak</strong> · Yapay Zeka ile Oluşturuldu</span>
+            <span>© 2026 WishJar · Created by <strong className="text-wj-text">Selçuk Kıvrak</strong> · Built with AI</span>
             <div className="flex gap-4">
-              <a href="/privacy" className="hover:text-wj-text">Gizlilik</a>
-              <a href="/terms" className="hover:text-wj-text">Koşullar</a>
-              <a href="mailto:slckkvrk@gmail.com" className="hover:text-wj-text">İletişim</a>
+              <a href="/privacy" className="hover:text-wj-text">Privacy</a>
+              <a href="/terms" className="hover:text-wj-text">Terms</a>
+              <a href="mailto:slckkvrk@gmail.com" className="hover:text-wj-text">Contact</a>
             </div>
           </div>
         </div>

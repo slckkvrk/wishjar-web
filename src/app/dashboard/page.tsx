@@ -90,7 +90,7 @@ export default function DashboardPage() {
             <div>
               <h1 className="text-xl font-bold text-wj-text">Hi, {username ?? "there"} 👋</h1>
               <p className="text-xs text-wj-muted">
-                {totalWishes} {totalWishes === 1 ? "wish" : "wishes"} growing today
+                {totalWishes} {totalWishes === 1 ? "wish" : "wishes"}
               </p>
             </div>
           </div>
@@ -193,9 +193,9 @@ export default function DashboardPage() {
             <div className="px-5 py-4">
               <div className="grid gap-3 md:grid-cols-3 mb-5">
                 {[
-                  { step: "1", title: "Create your first jar", desc: "Name it after your goal — a new home, a wedding, a trip. Pick a category and set a target amount." },
-                  { step: "2", title: "Add wish items", desc: "List the things you need. Add names, prices, and links. Your jar will track the total automatically." },
-                  { step: "3", title: "Share your jar", desc: "Copy your profile link and send it to friends or family. They can see your jar and cheer you on." },
+                  { step: "1", title: "Create a jar", desc: "Name your goal, pick a category, set a target." },
+                  { step: "2", title: "Add wishes", desc: "Add items with names, prices, and links." },
+                  { step: "3", title: "Share", desc: "Share your profile link with friends." },
                 ].map((item) => (
                   <div key={item.step} className="flex gap-3">
                     <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white bg-wj-plum shrink-0 mt-0.5">
@@ -234,7 +234,7 @@ export default function DashboardPage() {
 
       <footer className="hidden md:block mt-10 border-t border-wj-card-border bg-wj-card">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 text-xs text-wj-muted">
-          <span>© 2026 WishJar · Created by <strong className="text-wj-text">Selçuk Kıvrak</strong> · Built with AI assistance</span>
+          <span>© 2026 WishJar · Created by <strong className="text-wj-text">Selçuk Kıvrak</strong> · Built with AI</span>
           <div className="flex gap-4">
             <a href="/privacy" className="hover:text-wj-text">Privacy</a>
             <a href="/terms" className="hover:text-wj-text">Terms</a>

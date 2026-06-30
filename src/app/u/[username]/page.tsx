@@ -190,7 +190,7 @@ export default function ProfilePage() {
             <div className="rounded-2xl p-4 bg-wj-card border border-wj-card-border" style={{ boxShadow: "var(--wj-shadow)" }}>
               <h2 className="text-xs font-semibold text-wj-muted uppercase tracking-wide mb-3">New Post</h2>
               <textarea value={postContent} onChange={(e) => setPostContent(e.target.value)}
-                placeholder="Tell your community why your jar matters…"
+                placeholder="What's on your mind?"
                 rows={3} maxLength={500}
                 className="w-full rounded-xl border border-wj-card-border bg-wj-cream px-3 py-2 text-sm outline-none focus:border-wj-plum text-wj-text" />
               <div className="flex items-center gap-2 mt-2">

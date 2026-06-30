@@ -83,7 +83,7 @@ export default function NewJarPage() {
           </div>
           <h1 className="text-2xl font-bold text-wj-text">Create a new jar</h1>
           <p className="text-sm text-wj-muted mt-1">
-            A jar is your personal goal — give it a name, pick a category, and start adding wishes inside.
+            Name your goal, pick a category, and add wishes.
           </p>
         </div>
 
@@ -102,7 +102,7 @@ export default function NewJarPage() {
               className={inputCls}
               autoFocus
             />
-            <p className="mt-1 text-xs text-wj-muted">Give your jar a clear, memorable name.</p>
+            <p className="mt-1 text-xs text-wj-muted">Give it a name.</p>
           </div>
 
           {/* Category */}
@@ -145,9 +145,7 @@ export default function NewJarPage() {
                 className={`${inputCls} pl-7`}
               />
             </div>
-            <p className="mt-1 text-xs text-wj-muted">
-              Set a target total. Your jar will show a progress bar as you add wish items.
-            </p>
+            <p className="mt-1 text-xs text-wj-muted">Set a target amount.</p>
           </div>
 
           {/* Description */}
@@ -158,7 +156,7 @@ export default function NewJarPage() {
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Tell people what this jar is for and why it matters to you. This shows up on your public profile."
+              placeholder="What's this jar for?"
               rows={4}
               maxLength={1000}
               className={inputCls}
@@ -169,7 +167,7 @@ export default function NewJarPage() {
           {/* Error */}
           {message && (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-              <p className="text-xs font-semibold text-red-700 mb-0.5">Could not create jar</p>
+              <p className="text-xs font-semibold text-red-700 mb-0.5">Error</p>
               <p className="text-xs text-red-600">{message}</p>
             </div>
           )}

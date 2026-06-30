@@ -94,8 +94,8 @@ export default function SettingsProfilePage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!confirm("Delete your account? All your jars, wishes, and posts will be permanently removed. This cannot be undone.")) return;
-    if (!confirm("Are you absolutely sure?")) return;
+    if (!confirm("Delete account? All data will be removed. Cannot be undone.")) return;
+    if (!confirm("Sure?")) return;
     setDeleting(true);
     await supabase.auth.signOut();
     window.location.href = "/";
@@ -130,14 +130,14 @@ export default function SettingsProfilePage() {
 
         <div className="md:hidden mb-4">
           <h1 className="text-xl font-bold text-wj-text">Profile Settings</h1>
-          <p className="text-xs text-wj-muted mt-0.5">This is what others see on your public profile.</p>
+          <p className="text-xs text-wj-muted mt-0.5">Your public info.</p>
         </div>
 
         {/* Profile card */}
         <div className="rounded-2xl bg-wj-card border border-wj-card-border p-5 space-y-4" style={{ boxShadow: "var(--wj-shadow)" }}>
           <div className="border-b border-wj-card-border pb-3">
             <h2 className="text-sm font-bold text-wj-text">Edit Profile</h2>
-            <p className="text-xs text-wj-muted mt-0.5">Visible to everyone on your public page.</p>
+            <p className="text-xs text-wj-muted mt-0.5">Visible on your public page.</p>
           </div>
           <div>
             <label className={labelCls}>Username</label>
@@ -151,16 +151,16 @@ export default function SettingsProfilePage() {
                 className="flex-1 text-sm outline-none bg-transparent text-wj-text"
               />
             </div>
-            <p className="mt-1 text-xs text-wj-muted">Letters, numbers and underscores only. Min 3 chars.</p>
+            <p className="mt-1 text-xs text-wj-muted">a-z, 0-9, _ · min 3</p>
           </div>
           <div>
-            <label className={labelCls}>Bio <span className="text-wj-muted font-normal">(optional, max 160 chars)</span></label>
+            <label className={labelCls}>Bio <span className="text-wj-muted font-normal">(optional)</span></label>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={3}
               maxLength={160}
-              placeholder="Tell people a bit about yourself…"
+              placeholder="About you…"
               className={inputCls}
             />
             <p className="mt-1 text-right text-xs text-wj-muted">{bio.length}/160</p>
@@ -185,7 +185,7 @@ export default function SettingsProfilePage() {
         {/* Account / Sign Out */}
         <div className="mt-4 rounded-2xl bg-wj-card border border-wj-card-border p-5" style={{ boxShadow: "var(--wj-shadow)" }}>
           <h2 className="text-sm font-bold text-wj-text mb-1">Account</h2>
-          <p className="text-xs text-wj-muted mb-3">Sign out on this device.</p>
+          <p className="text-xs text-wj-muted mb-3">Sign out now.</p>
           <button
             onClick={handleSignOut}
             disabled={signingOut}
@@ -200,14 +200,14 @@ export default function SettingsProfilePage() {
           <h2 className="text-sm font-bold text-wj-text mb-3">Legal</h2>
           <div className="space-y-2 text-sm">
             <a href="/privacy" target="_blank" rel="noopener noreferrer" className="block text-wj-plum hover:underline">
-              Privacy Policy (KVKK / GDPR)
+              Privacy Policy
             </a>
             <a href="/terms" target="_blank" rel="noopener noreferrer" className="block text-wj-plum hover:underline">
               Terms of Service
             </a>
             <p className="mt-2 text-xs text-wj-muted">
-              To request data access, correction, or deletion, email{" "}
-              <a href="mailto:slckkvrk@gmail.com" className="underline">slckkvrk@gmail.com</a>.
+              Questions? Email{" "}
+              <a href="mailto:slckkvrk@gmail.com" className="underline">slckkvrk@gmail.com</a>
             </p>
           </div>
         </div>
@@ -216,7 +216,7 @@ export default function SettingsProfilePage() {
         <div className="mt-4 rounded-2xl bg-wj-card border border-red-200 p-5" style={{ boxShadow: "var(--wj-shadow)" }}>
           <h2 className="text-sm font-bold text-red-600 mb-2">Danger Zone</h2>
           <p className="mb-3 text-xs leading-5 text-wj-muted">
-            Deleting your account permanently removes all your data. This cannot be undone.
+            Removes all data. Cannot be undone.
           </p>
           <button
             onClick={handleDeleteAccount}

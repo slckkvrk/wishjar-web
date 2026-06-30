@@ -22,9 +22,9 @@ export default function SignUpPage() {
   const [message, setMessage] = useState("");
 
   const handleSignUp = async () => {
-    if (!email || !password) { setMessage("Please enter your email and password."); return; }
-    if (password.length < 8) { setMessage("Password must be at least 8 characters."); return; }
-    if (!agreed) { setMessage("Please accept the Terms and Privacy Policy to continue."); return; }
+    if (!email || !password) { setMessage("Enter email and password."); return; }
+    if (password.length < 8) { setMessage("Password too short (min 8)."); return; }
+    if (!agreed) { setMessage("Accept terms to continue."); return; }
     setLoading(true);
     setMessage("");
     const { error } = await supabase.auth.signUp({ email, password });
@@ -47,8 +47,8 @@ export default function SignUpPage() {
       <div className="mx-auto mt-14 max-w-sm px-4">
         <div className="rounded-2xl bg-wj-card border border-wj-card-border overflow-hidden" style={{ boxShadow: "var(--wj-shadow)" }}>
           <div className="border-b border-wj-card-border px-5 py-4">
-            <h1 className="text-base font-bold text-wj-text">Create your WishJar account</h1>
-            <p className="mt-0.5 text-xs text-wj-muted">It&apos;s free. No credit card required.</p>
+            <h1 className="text-base font-bold text-wj-text">Join WishJar</h1>
+            <p className="mt-0.5 text-xs text-wj-muted">Free. No card needed.</p>
           </div>
 
           <div className="px-5 py-5 space-y-4">
@@ -70,11 +70,10 @@ export default function SignUpPage() {
               <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}
                 className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-wj-plum" />
               <span className="text-xs leading-5 text-wj-muted">
-                I am at least 13 years old and I agree to WishJar&apos;s{" "}
-                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-wj-plum underline">Terms of Service</a>
+                I&apos;m 13+ and agree to the{" "}
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-wj-plum underline">Terms</a>
                 {" "}and{" "}
-                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-wj-plum underline">Privacy Policy</a>
-                , including transfer of data to Supabase (US).
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-wj-plum underline">Privacy Policy</a>.
               </span>
             </label>
             {message && (
