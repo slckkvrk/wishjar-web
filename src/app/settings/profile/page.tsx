@@ -13,6 +13,7 @@ export default function SettingsProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -51,6 +52,12 @@ export default function SettingsProfilePage() {
     }
     setCurrentUsername(cleaned);
     setSuccess(true);
+  };
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    await supabase.auth.signOut();
+    window.location.href = "/";
   };
 
   const handleDeleteAccount = async () => {
@@ -112,6 +119,15 @@ export default function SettingsProfilePage() {
           <button onClick={handleSave} disabled={saving}
             className="rounded-xl bg-wj-plum px-5 py-2.5 text-sm font-bold text-white hover:bg-wj-plum-mid disabled:opacity-60">
             {saving ? "Saving…" : "Save Changes"}
+          </button>
+        </div>
+
+        {/* Sign Out */}
+        <div className="mt-4 rounded-2xl bg-wj-card border border-wj-card-border p-5" style={{ boxShadow: "var(--wj-shadow)" }}>
+          <h2 className="text-sm font-bold text-wj-text mb-3">Account</h2>
+          <button onClick={handleSignOut} disabled={signingOut}
+            className="w-full rounded-xl border border-wj-card-border py-2.5 text-sm font-bold text-wj-text hover:bg-wj-cream disabled:opacity-50">
+            {signingOut ? "Signing out…" : "Sign Out"}
           </button>
         </div>
 
