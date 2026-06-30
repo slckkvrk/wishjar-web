@@ -58,7 +58,10 @@ export default function LoginPage() {
                 placeholder="you@example.com" />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-wj-text">Password</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-semibold text-wj-text">Password</label>
+                <a href="/forgot-password" className="text-xs text-wj-plum hover:underline">Forgot password?</a>
+              </div>
               <input type="password" autoComplete="current-password" value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLogin()}
