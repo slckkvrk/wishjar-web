@@ -627,7 +627,11 @@ Replace the whole block from `const { data: allJars } = await supabase` down to 
       });
 
       const followedBucket = (followedJarsRaw ?? []).map((j) => toFeedJar(j as (typeof allRaw)[number]));
-      const popularBucket = (popularJarsRaw ?? []).map((j) => toFeedJar(j as (typeof allRaw)[number]));
+      // Both buckets draw from status='active' jars, so a followed jar can also rank as
+      // popular — exclude anything already shown in followedBucket so it isn't duplicated.
+      const popularBucket = (popularJarsRaw ?? [])
+        .filter((j) => !followedSet.has(j.id))
+        .map((j) => toFeedJar(j as (typeof allRaw)[number]));
       const completedBucket = (completedJarsRaw ?? []).map((j) => toFeedJar(j as (typeof allRaw)[number]));
 
       setPopularJars(popularBucket);
@@ -698,6 +702,7 @@ Preconditions: sign in as a user who (a) follows at least 2–3 active jars, (b)
 3. Click "Follow"/"Unfollow" directly on a card in the feed — confirm the button and follower count update in place (Task 3's `FollowButton` wiring working inside a list, not just standalone).
 4. Temporarily note a jar you follow, unfollow all jars via Supabase Studio (`delete from jar_follows where user_id = '<your-id>'`), reload `/feed` — confirm the feed still fills completely from popular + completed (no gaps, no crash). Re-follow afterward if you want your test data back.
 5. Confirm the desktop "Trending Jars" sidebar (resize window or check `md:` breakpoint) lists jars ordered by follower count, not the blended order.
+6. Follow a jar that also has a high `follower_count` (likely to land in the popular bucket too) — confirm it appears exactly once in the feed, not twice (the `popularBucket` filter excludes anything already in `followedSet`).
 
 ---
 
