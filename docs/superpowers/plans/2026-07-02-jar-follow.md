@@ -45,6 +45,11 @@ create table if not exists jar_follows (
 
 alter table jars add column if not exists follower_count integer not null default 0;
 
+create index if not exists jars_follower_count_idx
+  on jars (follower_count desc) where status = 'active';
+
+create index if not exists jar_follows_jar_id_idx on jar_follows (jar_id);
+
 create or replace function jar_follows_adjust_count()
 returns trigger
 language plpgsql
@@ -102,6 +107,11 @@ In the Supabase Studio SQL Editor (or `npx supabase db push` output), run:
 select follower_count from jars limit 1;
 ```
 Expected: succeeds, returns a numeric column (existing jars show `0`).
+
+```sql
+select indexname from pg_indexes where tablename in ('jars', 'jar_follows');
+```
+Expected: includes `jars_follower_count_idx` and `jar_follows_jar_id_idx` (added after the final whole-branch review flagged their absence as the one thing standing between this counter and the scale rationale spec §1 justified it with).
 
 Pick any real jar id and any real user id that does **not** own it (`select id, user_id from jars limit 5;` and `select id from auth.users limit 5;` if needed), then:
 
