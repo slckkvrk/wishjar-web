@@ -1,6 +1,8 @@
+import { useState } from "react";
 import AvatarCircle from "./AvatarCircle";
 import ProgressBar from "./ProgressBar";
 import JarIllustration from "./JarIllustration";
+import FollowButton from "./FollowButton";
 import { completedLabel } from "@/lib/time";
 
 type JarCardProps = {
@@ -16,9 +18,16 @@ type JarCardProps = {
   };
   totalWishValue?: number;
   isOwn?: boolean;
+  followerCount?: number;
+  isFollowing?: boolean;
+  currentUserId?: string;
 };
 
-export default function JarCard({ jar, totalWishValue = 0, isOwn }: JarCardProps) {
+export default function JarCard({ jar, totalWishValue = 0, isOwn, followerCount, isFollowing, currentUserId }: JarCardProps) {
+  const [following, setFollowing] = useState(isFollowing ?? false);
+  const [count, setCount] = useState(followerCount ?? 0);
+  const showFollow = !isOwn && !!currentUserId && isFollowing !== undefined;
+
   const isCompleted = jar.status === "completed";
   const progressPct =
     jar.goal_amount && jar.goal_amount > 0
@@ -60,6 +69,11 @@ export default function JarCard({ jar, totalWishValue = 0, isOwn }: JarCardProps
             <div className="min-w-0">
               <p className="text-sm font-bold text-wj-text truncate">{jar.username}</p>
               <p className="text-xs text-wj-muted truncate">{jar.title}</p>
+              {followerCount !== undefined && (
+                <p className="text-[11px] text-wj-muted mt-0.5">
+                  {count} {count === 1 ? "follower" : "followers"}
+                </p>
+              )}
             </div>
           </div>
 
@@ -97,12 +111,22 @@ export default function JarCard({ jar, totalWishValue = 0, isOwn }: JarCardProps
       {/* Action buttons */}
       <div className="flex gap-2 mt-3">
         {isCompleted ? (
-          <a
-            href={`/jars/${jar.id}`}
-            className="flex-1 py-2 text-sm font-semibold text-center rounded-xl text-wj-text bg-wj-gold-card border border-wj-gold"
-          >
-            View Jar
-          </a>
+          <>
+            <a
+              href={`/jars/${jar.id}`}
+              className="flex-1 py-2 text-sm font-semibold text-center rounded-xl text-wj-text bg-wj-gold-card border border-wj-gold"
+            >
+              View Jar
+            </a>
+            {showFollow && (
+              <FollowButton
+                jarId={jar.id}
+                userId={currentUserId!}
+                following={following}
+                onToggle={(next) => { setFollowing(next); setCount((c) => c + (next ? 1 : -1)); }}
+              />
+            )}
+          </>
         ) : (
           <>
             <a
@@ -111,6 +135,14 @@ export default function JarCard({ jar, totalWishValue = 0, isOwn }: JarCardProps
             >
               View Jar
             </a>
+            {showFollow && (
+              <FollowButton
+                jarId={jar.id}
+                userId={currentUserId!}
+                following={following}
+                onToggle={(next) => { setFollowing(next); setCount((c) => c + (next ? 1 : -1)); }}
+              />
+            )}
             <button
               onClick={handleShare}
               className="flex-1 py-2 text-sm font-semibold text-center rounded-xl text-wj-text bg-wj-card border border-wj-card-border"
