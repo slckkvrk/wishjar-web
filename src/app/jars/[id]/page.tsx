@@ -7,11 +7,13 @@ import { requireUsername } from "@/lib/requireUsername";
 import SiteHeader from "@/components/SiteHeader";
 import JarIllustration from "@/components/JarIllustration";
 import ProgressBar from "@/components/ProgressBar";
+import FollowButton from "@/components/FollowButton";
 import BottomNav from "@/components/BottomNav";
 
 type Jar = {
   id: string; title: string; description: string | null; category: string;
   goal_amount: number | null; created_at: string; user_id: string; status: string;
+  follower_count: number;
 };
 type Wish = {
   id: string; title: string; description: string | null;
@@ -29,13 +31,16 @@ export default function JarDetailPage() {
   const [message, setMessage] = useState("");
   const [copied, setCopied] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [following, setFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
 
   useEffect(() => {
     const load = async () => {
       const auth = await requireUsername();
       if (!auth) return;
       const { data, error } = await supabase
-        .from("jars").select("id, title, description, category, goal_amount, created_at, user_id, status")
+        .from("jars").select("id, title, description, category, goal_amount, created_at, user_id, status, follower_count")
         .eq("id", jarId).single();
       if (error || !data) {
         setMessage(error ? `Jar not found. (${error.code}: ${error.message})` : "Jar not found.");
@@ -44,6 +49,14 @@ export default function JarDetailPage() {
       }
       setJar(data);
       setIsOwner(data.user_id === auth.userId);
+      setCurrentUserId(auth.userId);
+      setFollowerCount(data.follower_count);
+      if (data.user_id !== auth.userId) {
+        const { data: followRow } = await supabase
+          .from("jar_follows").select("user_id")
+          .eq("user_id", auth.userId).eq("jar_id", jarId).maybeSingle();
+        setFollowing(!!followRow);
+      }
       const { data: profile } = await supabase.from("profiles").select("username").eq("id", data.user_id).single();
       setOwnerUsername(profile?.username ?? null);
       const { data: wishesData } = await supabase
@@ -118,6 +131,22 @@ export default function JarDetailPage() {
                   <span className="font-semibold text-wj-text">{progressPct}%</span>
                 </div>
                 <ProgressBar value={progressPct} />
+              </div>
+            )}
+            {!isOwner && currentUserId && (
+              <div className="mt-3 flex items-center gap-2">
+                <FollowButton
+                  jarId={jar.id}
+                  userId={currentUserId}
+                  following={following}
+                  onToggle={(next) => {
+                    setFollowing(next);
+                    setFollowerCount((c) => c + (next ? 1 : -1));
+                  }}
+                />
+                <span className="text-xs text-wj-muted whitespace-nowrap">
+                  {followerCount} {followerCount === 1 ? "follower" : "followers"}
+                </span>
               </div>
             )}
           </div>
@@ -220,6 +249,22 @@ export default function JarDetailPage() {
                   <span className="font-semibold text-wj-text">{progressPct}%</span>
                 </div>
                 <ProgressBar value={progressPct} />
+              </div>
+            )}
+            {!isOwner && currentUserId && (
+              <div className="mt-3 flex items-center gap-2">
+                <FollowButton
+                  jarId={jar.id}
+                  userId={currentUserId}
+                  following={following}
+                  onToggle={(next) => {
+                    setFollowing(next);
+                    setFollowerCount((c) => c + (next ? 1 : -1));
+                  }}
+                />
+                <span className="text-xs text-wj-muted whitespace-nowrap">
+                  {followerCount} {followerCount === 1 ? "follower" : "followers"}
+                </span>
               </div>
             )}
             {isOwner && (
