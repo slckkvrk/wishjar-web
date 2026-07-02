@@ -73,7 +73,7 @@ export default function ManifestoSettingsPage() {
 
         <div className="md:hidden mb-4">
           <h1 className="text-xl font-bold text-wj-text">Manifesto</h1>
-          <p className="text-xs text-wj-muted mt-0.5">Only you see this. What you write here becomes real.</p>
+          <p className="text-xs text-wj-muted mt-0.5">A personal note on your home screen. What you write here becomes real.</p>
         </div>
 
         <div className="rounded-2xl bg-wj-card border border-wj-card-border p-5 space-y-4" style={{ boxShadow: "var(--wj-shadow)" }}>
