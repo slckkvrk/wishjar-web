@@ -68,6 +68,18 @@ export default function SettingsPage() {
           </a>
         </div>
 
+        {/* Manifesto */}
+        <div className="rounded-2xl bg-wj-card border border-wj-card-border p-5 mb-4" style={{ boxShadow: "var(--wj-shadow)" }}>
+          <h2 className="text-sm font-bold text-wj-text mb-1">Manifesto</h2>
+          <p className="text-xs text-wj-muted mb-3">The private note only you see on your home screen.</p>
+          <a
+            href="/settings/manifesto"
+            className="inline-block rounded-xl border border-wj-card-border px-4 py-2 text-sm font-semibold text-wj-text hover:bg-wj-cream"
+          >
+            Edit manifesto →
+          </a>
+        </div>
+
         {/* Sign out */}
         <div className="rounded-2xl bg-wj-card border border-wj-card-border p-5 mb-4" style={{ boxShadow: "var(--wj-shadow)" }}>
           <h2 className="text-sm font-bold text-wj-text mb-1">Account</h2>
