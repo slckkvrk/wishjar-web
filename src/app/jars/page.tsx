@@ -17,11 +17,13 @@ const MAX_JARS = 3;
 export default function JarsPage() {
   const [jars, setJars] = useState<Jar[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isPremium, setIsPremium] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       const auth = await requireUsername();
       if (!auth) return;
+      setIsPremium(auth.isPremium);
       const { data } = await supabase
         .from("jars")
         .select("id, title, description, category, goal_amount, status, created_at, completed_at")
@@ -34,7 +36,7 @@ export default function JarsPage() {
   }, []);
 
   const activeJars = jars.filter((j) => j.status !== "completed");
-  const atLimit = activeJars.length >= MAX_JARS;
+  const atLimit = !isPremium && activeJars.length >= MAX_JARS;
 
   if (loading) {
     return (

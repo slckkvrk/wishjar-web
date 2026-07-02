@@ -34,6 +34,7 @@ export default function NewJarPage() {
     const check = async () => {
       const auth = await requireUsername();
       if (!auth) return;
+      if (auth.isPremium) { setLoading(false); return; }
 
       const { count } = await supabase
         .from("jars")
@@ -55,17 +56,19 @@ export default function NewJarPage() {
     const auth = await requireUsername();
     if (!auth) return;
 
-    // Re-check limit at submit time
-    const { count } = await supabase
-      .from("jars")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", auth.userId)
-      .eq("status", "active");
+    if (!auth.isPremium) {
+      // Re-check limit at submit time
+      const { count } = await supabase
+        .from("jars")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", auth.userId)
+        .eq("status", "active");
 
-    if ((count ?? 0) >= MAX_JARS) {
-      setAtLimit(true);
-      setSaving(false);
-      return;
+      if ((count ?? 0) >= MAX_JARS) {
+        setAtLimit(true);
+        setSaving(false);
+        return;
+      }
     }
 
     const { data: inserted, error } = await supabase
