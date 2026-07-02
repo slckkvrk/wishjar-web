@@ -9,7 +9,7 @@ import AvatarCircle from "@/components/AvatarCircle";
 import BottomNav from "@/components/BottomNav";
 import { sanitizeText } from "@/lib/validate";
 
-type Profile = { id: string; username: string; bio: string | null; created_at: string; };
+type Profile = { id: string; username: string; bio: string | null; created_at: string; is_premium: boolean; };
 type Jar = { id: string; title: string; description: string | null; category: string; goal_amount: number | null; };
 type Post = { id: string; content: string; jar_id: string | null; jar_title: string | null; created_at: string; };
 
@@ -36,7 +36,7 @@ export default function ProfilePage() {
       if (!userData.user) { window.location.href = "/login"; return; }
       setCurrentUserId(userData.user.id);
 
-      const { data: profileData } = await supabase.from("profiles").select("id, username, bio, created_at").eq("username", username).single();
+      const { data: profileData } = await supabase.from("profiles").select("id, username, bio, created_at, is_premium").eq("username", username).single();
       if (!profileData) { setLoading(false); return; }
       setProfile(profileData);
 
@@ -110,7 +110,10 @@ export default function ProfilePage() {
           <div className="flex items-center gap-3 mb-3">
             <AvatarCircle name={profile.username} size="lg" />
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-wj-text">@{profile.username}</h1>
+              <h1 className="text-xl font-bold text-wj-text">
+                @{profile.username}
+                {profile.is_premium && <span title="Premium account" className="ml-1.5 text-wj-gold">★</span>}
+              </h1>
               {profile.bio && <p className="text-xs text-wj-muted mt-0.5">{profile.bio}</p>}
               <p className="text-xs text-wj-muted mt-1">
                 {jars.length} jar{jars.length !== 1 ? "s" : ""} · {posts.length} post{posts.length !== 1 ? "s" : ""}
@@ -155,7 +158,10 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3">
                 <AvatarCircle name={profile.username} size="lg" />
                 <div>
-                  <h1 className="text-base font-bold text-wj-text">@{profile.username}</h1>
+                  <h1 className="text-base font-bold text-wj-text">
+                    @{profile.username}
+                    {profile.is_premium && <span title="Premium account" className="ml-1.5 text-wj-gold">★</span>}
+                  </h1>
                   {profile.bio && <p className="mt-0.5 text-sm text-wj-muted">{profile.bio}</p>}
                   <p className="mt-1 text-xs text-wj-muted">
                     {jars.length} jar{jars.length !== 1 ? "s" : ""} · {posts.length} post{posts.length !== 1 ? "s" : ""}
