@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { timeAgo } from "@/lib/time";
 import SiteHeader from "@/components/SiteHeader";
 import AvatarCircle from "@/components/AvatarCircle";
 import BottomNav from "@/components/BottomNav";
-import { sanitizeText } from "@/lib/validate";
+import PostComposer from "@/components/PostComposer";
+import PostCard from "@/components/PostCard";
 
-type Profile = { id: string; username: string; bio: string | null; created_at: string; is_premium: boolean; };
+type Profile = { id: string; username: string; bio: string | null; created_at: string; is_premium: boolean; avatar_url: string | null; };
 type Jar = { id: string; title: string; description: string | null; category: string; goal_amount: number | null; };
 type Post = { id: string; content: string; jar_id: string | null; jar_title: string | null; created_at: string; };
 
@@ -24,10 +24,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"posts" | "jars">("posts");
 
-  const [postContent, setPostContent] = useState("");
-  const [postJarId, setPostJarId] = useState("");
-  const [posting, setPosting] = useState(false);
-  const [postError, setPostError] = useState("");
   const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
@@ -36,7 +32,7 @@ export default function ProfilePage() {
       if (!userData.user) { window.location.href = "/login"; return; }
       setCurrentUserId(userData.user.id);
 
-      const { data: profileData } = await supabase.from("profiles").select("id, username, bio, created_at, is_premium").eq("username", username).single();
+      const { data: profileData } = await supabase.from("profiles").select("id, username, bio, created_at, is_premium, avatar_url").eq("username", username).single();
       if (!profileData) { setLoading(false); return; }
       setProfile(profileData);
 
@@ -53,20 +49,8 @@ export default function ProfilePage() {
     load();
   }, [username]);
 
-  const handlePost = async () => {
-    const content = sanitizeText(postContent, 500);
-    if (!content) return;
-    setPosting(true);
-    setPostError("");
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) return;
-    const { data: inserted, error } = await supabase.from("posts").insert({ user_id: userData.user.id, content, jar_id: postJarId || null }).select("id, content, jar_id, created_at").single();
-    setPosting(false);
-    if (error) { setPostError(error.message); return; }
-    const jarMap = Object.fromEntries(jars.map((j) => [j.id, j.title]));
-    setPosts((prev) => [{ ...inserted, jar_title: inserted.jar_id ? (jarMap[inserted.jar_id] ?? null) : null }, ...prev]);
-    setPostContent("");
-    setPostJarId("");
+  const handlePosted = (post: { id: string; content: string; jar_id: string | null; jar_title: string | null; created_at: string }) => {
+    setPosts((prev) => [post, ...prev]);
   };
 
   const handleSignOut = async () => {
@@ -108,7 +92,7 @@ export default function ProfilePage() {
       <div className="md:hidden" style={{ background: "#FDFAF3", borderBottom: "1px solid #E8DCBB" }}>
         <div className="px-4 pt-5 pb-4">
           <div className="flex items-center gap-3 mb-3">
-            <AvatarCircle name={profile.username} size="lg" />
+            <AvatarCircle name={profile.username} size="lg" avatarUrl={profile.avatar_url} />
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-wj-text">
                 @{profile.username}
@@ -156,7 +140,7 @@ export default function ProfilePage() {
           <div className="hidden md:block rounded-2xl p-4 bg-wj-card border border-wj-card-border" style={{ boxShadow: "var(--wj-shadow)" }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <AvatarCircle name={profile.username} size="lg" />
+                <AvatarCircle name={profile.username} size="lg" avatarUrl={profile.avatar_url} />
                 <div>
                   <h1 className="text-base font-bold text-wj-text">
                     @{profile.username}
@@ -192,26 +176,8 @@ export default function ProfilePage() {
           </div>
 
           {/* Post composer */}
-          {isOwn && (
-            <div className="rounded-2xl p-4 bg-wj-card border border-wj-card-border" style={{ boxShadow: "var(--wj-shadow)" }}>
-              <h2 className="text-xs font-semibold text-wj-muted uppercase tracking-wide mb-3">New Post</h2>
-              <textarea value={postContent} onChange={(e) => setPostContent(e.target.value)}
-                placeholder="What's on your mind?"
-                rows={3} maxLength={500}
-                className="w-full rounded-xl border border-wj-card-border bg-wj-cream px-3 py-2 text-sm outline-none focus:border-wj-plum text-wj-text" />
-              <div className="flex items-center gap-2 mt-2">
-                <select value={postJarId} onChange={(e) => setPostJarId(e.target.value)}
-                  className="flex-1 rounded-xl border border-wj-card-border bg-wj-card px-3 py-1.5 text-xs outline-none text-wj-text">
-                  <option value="">Link a jar (optional)</option>
-                  {jars.map((j) => <option key={j.id} value={j.id}>🫙 {j.title}</option>)}
-                </select>
-                <button onClick={handlePost} disabled={posting || !postContent.trim()}
-                  className="rounded-xl bg-wj-plum px-4 py-1.5 text-xs font-bold text-white hover:bg-wj-plum-mid disabled:opacity-50">
-                  {posting ? "Posting…" : "Post"}
-                </button>
-              </div>
-              {postError && <p className="mt-2 text-xs text-red-600">{postError}</p>}
-            </div>
+          {isOwn && currentUserId && (
+            <PostComposer userId={currentUserId} jars={jars} onPosted={handlePosted} />
           )}
 
           {/* Posts tab */}
@@ -223,24 +189,16 @@ export default function ProfilePage() {
             ) : (
               <div className="space-y-2">
                 {posts.map((post) => (
-                  <div key={post.id} className="rounded-2xl p-4 bg-wj-card border border-wj-card-border" style={{ boxShadow: "var(--wj-shadow)" }}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-wj-muted">{timeAgo(post.created_at)}</span>
-                      {isOwn && (
-                        <button onClick={() => handleDeletePost(post.id)} className="text-xs text-wj-muted hover:text-red-500">
-                          Delete
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-sm leading-6 text-wj-text">{post.content}</p>
-                    {post.jar_title && post.jar_id && (
-                      <div className="mt-2">
-                        <a href={`/jars/${post.jar_id}`} className="inline-block rounded-xl border border-wj-gold-card bg-wj-gold-light px-2.5 py-1 text-xs font-semibold text-wj-text hover:opacity-80">
-                          🫙 {post.jar_title}
-                        </a>
-                      </div>
-                    )}
-                  </div>
+                  <PostCard
+                    key={post.id}
+                    username={profile.username}
+                    createdAt={post.created_at}
+                    content={post.content}
+                    jarId={post.jar_id}
+                    jarTitle={post.jar_title}
+                    showAuthor={false}
+                    onDelete={isOwn ? () => handleDeletePost(post.id) : undefined}
+                  />
                 ))}
               </div>
             )
