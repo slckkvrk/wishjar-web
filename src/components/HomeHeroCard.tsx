@@ -8,9 +8,12 @@ type Props = {
   avatarUrl: string | null;
   manifestLine1: string | null;
   manifestLine2: string | null;
+  hasUnreadNotifications?: boolean;
 };
 
-export default function HomeHeroCard({ userId, username, avatarUrl, manifestLine1, manifestLine2 }: Props) {
+export default function HomeHeroCard({
+  userId, username, avatarUrl, manifestLine1, manifestLine2, hasUnreadNotifications = false,
+}: Props) {
   return (
     <section className="relative overflow-hidden rounded-b-[34px] md:rounded-3xl mx-4 md:mx-auto md:max-w-5xl mt-4 mb-4 bg-wj-cream px-5 pb-7 pt-6 shadow-[inset_0_-1px_0_rgba(92,55,38,0.08)]">
       {/* Soft background glow */}
@@ -35,12 +38,15 @@ export default function HomeHeroCard({ userId, username, avatarUrl, manifestLine
               <Settings size={20} strokeWidth={2.1} />
             </a>
             <a
-              href="/feed"
+              href="/notifications"
               aria-label="Notifications"
               title="Notifications"
-              className="grid h-11 w-11 place-items-center rounded-2xl border border-wj-card-border bg-wj-card/85 text-wj-plum shadow-[0_5px_12px_rgba(64,35,20,0.08)] active:scale-[0.98]"
+              className="relative grid h-11 w-11 place-items-center rounded-2xl border border-wj-card-border bg-wj-card/85 text-wj-plum shadow-[0_5px_12px_rgba(64,35,20,0.08)] active:scale-[0.98]"
             >
               <Bell size={20} strokeWidth={2.1} />
+              {hasUnreadNotifications && (
+                <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full border-2 border-wj-card bg-red-500" />
+              )}
             </a>
           </div>
         </div>

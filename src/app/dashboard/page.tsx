@@ -24,6 +24,7 @@ export default function DashboardPage() {
   const [myJars, setMyJars] = useState<Jar[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -32,16 +33,18 @@ export default function DashboardPage() {
       setUserId(auth.userId);
       setUsername(auth.username);
 
-      const [{ data: profile }, { data: jarsData }, { data: rawPosts }] = await Promise.all([
+      const [{ data: profile }, { data: jarsData }, { data: rawPosts }, { data: unreadNotifications }] = await Promise.all([
         supabase.from("profiles").select("avatar_url, manifest_line1, manifest_line2").eq("id", auth.userId).single(),
         supabase.from("jars").select("id, title").eq("user_id", auth.userId).order("created_at", { ascending: false }),
         supabase.from("posts").select("id, user_id, jar_id, content, created_at").order("created_at", { ascending: false }).limit(50),
+        supabase.from("notifications").select("id").eq("recipient_id", auth.userId).is("read_at", null).limit(1),
       ]);
 
       setAvatarUrl(profile?.avatar_url ?? null);
       setManifestLine1(profile?.manifest_line1 ?? null);
       setManifestLine2(profile?.manifest_line2 ?? null);
       setMyJars(jarsData ?? []);
+      setHasUnreadNotifications((unreadNotifications ?? []).length > 0);
 
       if (rawPosts && rawPosts.length > 0) {
         const userIds = [...new Set(rawPosts.map((p) => p.user_id))];
@@ -92,6 +95,7 @@ export default function DashboardPage() {
         avatarUrl={avatarUrl}
         manifestLine1={manifestLine1}
         manifestLine2={manifestLine2}
+        hasUnreadNotifications={hasUnreadNotifications}
       />
 
       <div className="px-4 md:mx-auto md:max-w-5xl space-y-3">
