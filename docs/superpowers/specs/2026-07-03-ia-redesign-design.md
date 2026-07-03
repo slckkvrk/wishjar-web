@@ -26,7 +26,25 @@ Bu bir tema/görsel tasarım değişikliği **değildir** — mevcut renk paleti
 | `/settings/profile` | Username/bio düzenleme | Yukarıdaki yeni alanlar buraya eklenir (ayrı bir alt sayfa açılmaz — mevcut sayfa genişler). |
 | `/notifications` | Bildirimler | Değişmez, ama "← Home" linki `/dashboard` yerine `/` olmalı. |
 
-**İç link güncellemeleri gereken yerler** (route değişikliğinin yayılma etkisi): `BottomNav.tsx` (home linki), `SiteHeader.tsx` (logo linki), `PostCard.tsx`/diğer "← Home" linkleri, `HomeHeroCard.tsx` bell linki (`/notifications` zaten doğru), `requireUsername`'ın yönlendirdiği yerler, `/settings` sayfasındaki "← Home" linki, `NotificationRow`'un jar linkleri (değişmiyor, zaten `/jars/[id]`).
+**İç link güncellemeleri gereken yerler** (route değişikliğinin yayılma etkisi — kod üzerinde `"/dashboard"` için grep edilip doğrulandı, aşağıdaki liste eksiksiz):
+
+- `src/app/page.tsx:10` — **en kritik olan**: signed-in kullanıcıyı `/dashboard`'a yönlendiren redirect. Redesign'ın kendisi bu satırı kaldırıp yerine Home Timeline'ı `/`'in içinde render etmek demek (ayrı bir redirect değil).
+- `src/components/BottomNav.tsx:39` — home nav linki.
+- `src/components/SiteHeader.tsx:44,53` — logo linki + "Home" nav linki. (`:54`'teki `/feed` linki de `/jars`'a değişecek.)
+- `src/app/settings/page.tsx:52` — "← Home" linki.
+- `src/app/settings/profile/page.tsx:103` — kaydetme sonrası fallback linki (`savedUsername` yoksa `/dashboard`'a düşüyor).
+- `src/app/jars/[id]/page.tsx:98` — "← Back to Home" linki.
+- `src/app/jars/new/page.tsx:116,140,228` — üç ayrı "← Home" linki.
+- `src/app/jars/[id]/edit/page.tsx:72` — kayıt sonrası `window.location.href` redirect'i.
+- `src/app/setup/username/page.tsx:18,39` — kullanıcı adı zaten varsa / yeni set edildiğinde redirect.
+- `src/app/u/[username]/page.tsx:80` — "kullanıcı bulunamadı" durumundaki "← Home" linki.
+- `src/app/reset-password/page.tsx:66` — şifre sıfırlama sonrası redirect.
+- `src/app/login/page.tsx:32` — giriş sonrası redirect.
+- `src/app/notifications/page.tsx:93` — "← Home" linki.
+- `HomeHeroCard.tsx` bell linki: `/notifications` zaten doğru, değişmiyor.
+- `NotificationRow`'un jar linkleri: değişmiyor, zaten `/jars/[id]`.
+
+**Düzeltme:** önceki taslakta `PostCard.tsx`'in bir "← Home" linki içerdiği yazılmıştı — kontrol edildi, **yanlış**: `PostCard.tsx` sadece `/u/${username}` ve `/jars/${jarId}`'e link veriyor, ikisi de değişmiyor, bu dosyada güncellenecek bir şey yok.
 
 ---
 
