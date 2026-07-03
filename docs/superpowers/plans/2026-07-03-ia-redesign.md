@@ -149,13 +149,15 @@ export async function requireUsername(): Promise<{ userId: string; username: str
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) { window.location.href = "/login"; return null; }
   const { data: profile } = await supabase
-    .from("profiles").select("username, is_premium, is_verified").eq("id", user.id).single();
+    .from("profiles").select("username, is_premium").eq("id", user.id).single();
   if (!profile?.username) { window.location.href = "/setup/username"; return null; }
-  return { userId: user.id, username: profile.username, isPremium: profile.is_premium ?? false, isVerified: profile.is_verified ?? false };
+  const { data: verification } = await supabase
+    .from("profiles").select("is_verified").eq("id", user.id).single();
+  return { userId: user.id, username: profile.username, isPremium: profile.is_premium ?? false, isVerified: verification?.is_verified ?? false };
 }
 ```
 
-Note: `is_verified` defaults to `false` at the DB level and this function already falls back to `false` via `?? false` if the column read fails for any reason (e.g. migration not yet applied causes the *whole* query to error, `profile` becomes `undefined` from `.single()`, and the existing `if (!profile?.username)` check already redirects to `/setup/username` in that case — this is pre-existing behavior, not a new regression, since `username` would be missing too).
+**Corrected during Task 2's review** (this note replaces an earlier, incorrect version of this task): PostgREST fails an entire `select()` if *any* requested column doesn't exist yet — it does not return the other columns with the missing one blank. The original version of this snippet combined `is_verified` into the same `select("username, is_premium, is_verified")` as `username`, reasoning that a pre-migration failure was "pre-existing behavior, not a new regression, since username would be missing too." That reasoning was wrong: before this task, that query only ever failed for a row genuinely missing a username (rare, expected case); after combining in `is_verified`, the *entire query* fails for *every* user whenever the migration hasn't been applied yet — misrouting every signed-in user to `/setup/username` on every page that calls `requireUsername()`, not a graceful degradation of one feature. `is_verified` is now fetched in its own separate query specifically so its failure can't take down the username check, per this plan's own Global Constraint.
 
 - [ ] **Step 2: Type-check**
 
