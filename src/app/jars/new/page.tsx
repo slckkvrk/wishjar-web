@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { requireUsername } from "@/lib/requireUsername";
 import SiteHeader from "@/components/SiteHeader";
 import BottomNav from "@/components/BottomNav";
+import VerificationGate from "@/components/VerificationGate";
 import { sanitizeText } from "@/lib/validate";
 
 const categories = [
@@ -29,11 +30,29 @@ export default function NewJarPage() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [atLimit, setAtLimit] = useState(false);
+  const [isVerified, setIsVerified] = useState(true);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
 
   useEffect(() => {
     const check = async () => {
       const auth = await requireUsername();
       if (!auth) return;
+
+      if (!auth.isVerified) {
+        const { data: profile } = await supabase
+          .from("profiles").select("first_name, last_name, city, country, phone").eq("id", auth.userId).single();
+        const missing: string[] = [];
+        if (!(profile?.first_name ?? "").trim()) missing.push("first name");
+        if (!(profile?.last_name ?? "").trim()) missing.push("last name");
+        if (!(profile?.city ?? "").trim()) missing.push("city");
+        if (!(profile?.country ?? "").trim()) missing.push("country");
+        if (!(profile?.phone ?? "").trim()) missing.push("phone");
+        setMissingFields(missing);
+        setIsVerified(false);
+        setLoading(false);
+        return;
+      }
+
       if (auth.isPremium) { setLoading(false); return; }
 
       const { count } = await supabase
@@ -105,6 +124,14 @@ export default function NewJarPage() {
     <div className="min-h-screen bg-wj-cream">
       <SiteHeader activeTab="home" />
       <div className="flex items-center justify-center pt-20 text-sm text-wj-muted">Loading…</div>
+    </div>
+  );
+
+  if (!isVerified) return (
+    <div className="min-h-screen bg-wj-cream pb-20 md:pb-0">
+      <SiteHeader activeTab="home" />
+      <VerificationGate missingFields={missingFields} />
+      <BottomNav active="create" />
     </div>
   );
 
