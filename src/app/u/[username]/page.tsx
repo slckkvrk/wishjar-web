@@ -143,7 +143,7 @@ export default function ProfilePage() {
                   backgroundColor: tab === t ? "#3D1A24" : "transparent",
                   color: tab === t ? "white" : "#9B7E6A",
                 }}>
-                {t === "jars" ? "My Jars" : "Posts"} ({t === "posts" ? posts.length : jars.length})
+                {t === "jars" ? (isOwn ? "My Jars" : "Jars") : "Posts"} ({t === "posts" ? posts.length : jars.length})
               </button>
             ))}
           </div>
@@ -188,7 +188,7 @@ export default function ProfilePage() {
                   backgroundColor: tab === t ? "#3D1A24" : "transparent",
                   color: tab === t ? "white" : "#9B7E6A",
                 }}>
-                {t === "jars" ? "My Jars" : "Posts"} ({t === "posts" ? posts.length : jars.length})
+                {t === "jars" ? (isOwn ? "My Jars" : "Jars") : "Posts"} ({t === "posts" ? posts.length : jars.length})
               </button>
             ))}
           </div>
