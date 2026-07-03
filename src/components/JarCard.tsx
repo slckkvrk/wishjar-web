@@ -14,6 +14,7 @@ type JarCardProps = {
     goal_amount: number | null;
     status: string;
     username: string;
+    isVerified?: boolean;
     completed_at?: string | null;
   };
   totalWishValue?: number;
@@ -67,13 +68,14 @@ export default function JarCard({ jar, totalWishValue = 0, isOwn, followerCount,
           <div className="flex items-center gap-2 mb-2">
             <AvatarCircle name={jar.username} size="sm" />
             <div className="min-w-0">
-              <p className="text-sm font-bold text-wj-text truncate">{jar.username}</p>
+              <p className="text-sm font-bold text-wj-text truncate">
+                by @{jar.username}
+                {jar.isVerified && <span title="Verified account" className="ml-1 text-wj-plum">✓</span>}
+              </p>
               <p className="text-xs text-wj-muted truncate">{jar.title}</p>
-              {followerCount !== undefined && (
-                <p className="text-[11px] text-wj-muted mt-0.5">
-                  {count} {count === 1 ? "follower" : "followers"}
-                </p>
-              )}
+              <p className="text-[11px] text-wj-muted mt-0.5">
+                {count} {count === 1 ? "supporter" : "supporters"}
+              </p>
             </div>
           </div>
 
