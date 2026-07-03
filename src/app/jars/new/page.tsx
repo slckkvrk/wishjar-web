@@ -41,14 +41,20 @@ export default function NewJarPage() {
       setOwnUsername(auth.username);
 
       if (!auth.isVerified) {
-        const { data: profile } = await supabase
-          .from("profiles").select("first_name, last_name, city, country, phone").eq("id", auth.userId).single();
+        // phone is revoked from the base `profiles` table for `authenticated` by Task 1's
+        // migration (same revoke as manifest_line1/2) — it must come from `profiles_private`,
+        // in a query separate from the other four fields, or this whole select fails once
+        // the migration is live (the exact class of bug Task 2's review caught).
+        const [{ data: profile }, { data: privatePhone }] = await Promise.all([
+          supabase.from("profiles").select("first_name, last_name, city, country").eq("id", auth.userId).single(),
+          supabase.from("profiles_private").select("phone").eq("id", auth.userId).single(),
+        ]);
         const missing: string[] = [];
         if (!(profile?.first_name ?? "").trim()) missing.push("first name");
         if (!(profile?.last_name ?? "").trim()) missing.push("last name");
         if (!(profile?.city ?? "").trim()) missing.push("city");
         if (!(profile?.country ?? "").trim()) missing.push("country");
-        if (!(profile?.phone ?? "").trim()) missing.push("phone");
+        if (!(privatePhone?.phone ?? "").trim()) missing.push("phone");
         setMissingFields(missing);
         setIsVerified(false);
         setLoading(false);

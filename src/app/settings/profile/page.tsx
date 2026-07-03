@@ -45,17 +45,24 @@ export default function EditProfilePage() {
         setSavedUsername(profile.username ?? "");
         setBio(profile.bio ?? "");
       }
-      const { data: trustFields } = await supabase
-        .from("profiles")
-        .select("first_name, last_name, city, country, phone, cover_template, social_instagram, social_tiktok, social_youtube, social_facebook, contact_email")
-        .eq("id", auth.userId)
-        .single();
+      // phone is revoked from the base `profiles` table for `authenticated` (same revoke as
+      // manifest_line1/2, Task 1's migration) -- it must be read from `profiles_private` in a
+      // query separate from the other trust fields, or this whole select fails once the
+      // migration is live, exactly like the bug Task 2's review caught for is_verified.
+      const [{ data: trustFields }, { data: privatePhone }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("first_name, last_name, city, country, cover_template, social_instagram, social_tiktok, social_youtube, social_facebook, contact_email")
+          .eq("id", auth.userId)
+          .single(),
+        supabase.from("profiles_private").select("phone").eq("id", auth.userId).single(),
+      ]);
+      setPhone(privatePhone?.phone ?? "");
       if (trustFields) {
         setFirstName(trustFields.first_name ?? "");
         setLastName(trustFields.last_name ?? "");
         setCity(trustFields.city ?? "");
         setCountry(trustFields.country ?? "");
-        setPhone(trustFields.phone ?? "");
         setCoverTemplate(trustFields.cover_template ?? null);
         setSocialInstagram(trustFields.social_instagram ?? "");
         setSocialTiktok(trustFields.social_tiktok ?? "");
