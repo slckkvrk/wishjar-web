@@ -23,7 +23,7 @@ export default function ManifestoSettingsPage() {
       if (!auth) return;
       setUserId(auth.userId);
       const { data: profile } = await supabase
-        .from("profiles").select("manifest_line1, manifest_line2").eq("id", auth.userId).single();
+        .from("profiles_private").select("manifest_line1, manifest_line2").eq("id", auth.userId).single();
       setLine1(profile?.manifest_line1 ?? "");
       setLine2(profile?.manifest_line2 ?? "");
       setLoading(false);
