@@ -57,7 +57,11 @@ Bu bir tema/görsel tasarım değişikliği **değildir** — mevcut renk paleti
 - **Yeni `ProfileHeader.tsx`**: `/u/[username]/page.tsx` içine gömülü olan header JSX'i (şu an ~60 satır, dosya zaten 200+ satır) ayrı bileşene çıkar. Kapak + avatar + isim soyisim + `@username` + doğrulanmış rozet + şehir/ülke + bio + sosyal ikonlar satırı + iletişim (mail) ikonu. Sadece dolu alanlar gösterilir (boş sosyal link ikonu render edilmez).
 - **Yeni `VerificationGate.tsx`**: `/jars/new` mount olduğunda `isVerified === false` ise form yerine gösterilir. İçerik: "Verify your account to create a jar." + hangi alanların eksik olduğunu listeleyen kısa metin + `/settings/profile`'a link.
 - **`PostComposer.tsx`**: `<select>` placeholder'ı "Link a jar (optional)" → **"Which jar is this about?"**, `required` davranışı eklenir (jar seçilmeden `Post` butonu disabled). `jars.length === 0` ise composer yerine "You need a jar to post yet. Create one first." + `/jars/new` linki gösterilir (composer hiç render edilmez).
-- **`JarCard.tsx`**: `by @username` satırı zaten var (opsiyonel prop değil, `jar.username` her zaman geçiliyor) — davranışsal değişiklik yok, sadece spec'in "zorunlu" ifadesiyle teyit ediliyor. Yeni: "kalan gün" alanı — `goal_date` gibi bir kolon **yok**, bu yüzden bu alan sadece `goal_amount` dolu VE `created_at`'ten türetilen bir tahmini süre yerine, basitçe **eklenmiyor** (spec'te "varsa" notu vardı; veri yok, YAGNI — bkz. Kapsam Dışı).
+- **`JarCard.tsx`** (kontrol edildi, önceki taslaktaki iddia yanlıştı — `jar.username` her zaman geçiliyor ama **düz metin olarak** render ediliyor, "by @" öneki yok, ve `is_verified` kolonu henüz yoksa rozet de yok): aşağıdaki alanlar zorunlu hale gelir, hiçbiri opsiyonel prop olarak kalmaz:
+  - `by @{username}` formatında creator etiketi (şu an sadece `{jar.username}`).
+  - Doğrulanmış rozet: `is_verified` true ise küçük bir ✓ ikonu, kullanıcı adının yanında.
+  - Destekçi sayısı: `followerCount` prop'u şu an opsiyonel ve sadece `/feed`'de geçiliyor — her yerde (Profile'ın My Jars listesi, Jars keşif sayfası) zorunlu hale gelir, jar'ı sorgulayan her yerde `follower_count` kolonu select edilir.
+  - **"Kalan gün" eklenmiyor** — önceki taslakta "veri yok, YAGNI" denmişti; 2026-07-03'te kullanıcıyla netleşti ki bu sadece eksik veri değil, kavramsal bir uyuşmazlık: jar'lar bir **tarihte değil, hedef bağış tutarına ulaşınca** tamamlanıyor (`status` alanı `goal_amount`'a göre güncelleniyor, bkz. mevcut completion mantığı). Ürün modelinde "bitiş tarihi" diye bir şey yok, olması da tasarlanmıyor — bu yüzden bu alan spec'ten tamamen çıkarılıyor, gelecekte de eklenmeyecek (YAGNI değil, model uyuşmazlığı).
 
 ---
 
@@ -149,6 +153,8 @@ Başka kullanıcının profilini okuyan her yer (`/u/[username]`, feed/post-auth
 ## 5. Bottom Nav Davranışı
 
 Route hedefleri güncellenir: `Home` → `/` (şu an `/dashboard`), diğerleri aynı (`/jars`, `/jars/new`, `/u/[username]`). Etiket kaldırma detayı §2'de.
+
+**Mobil/masaüstü kuralı (kontrol edildi, zaten uyumlu):** "mobilde global SiteHeader görünmemeli" kuralı zaten sağlanıyor — `SiteHeader.tsx:41`'de `hidden md:block` var, breakpoint da zaten Tailwind'in varsayılan `md:` (768px) değeriyle örtüşüyor. Bu maddede yapılacak bir kod değişikliği yok, sadece doğrulandı.
 
 ---
 
