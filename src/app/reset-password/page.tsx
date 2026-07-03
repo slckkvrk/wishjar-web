@@ -63,7 +63,7 @@ export default function ResetPasswordPage() {
     setLoading(false);
     if (error) { setMessage(error.message); return; }
     setStatus("done");
-    setTimeout(() => { window.location.href = "/dashboard"; }, 2000);
+    setTimeout(() => { window.location.href = "/"; }, 2000);
   };
 
   return (

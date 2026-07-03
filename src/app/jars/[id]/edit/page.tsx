@@ -69,7 +69,7 @@ export default function EditJarPage() {
       type: "broadcast", event: "jar_completed",
       payload: { jar_title: title, username: profile?.username ?? "someone" },
     });
-    window.location.href = "/dashboard";
+    window.location.href = "/";
   };
 
   const handleDelete = async () => {

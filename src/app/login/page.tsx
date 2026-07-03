@@ -29,7 +29,7 @@ export default function LoginPage() {
     if (error) { setMessage("Wrong email or password."); return; }
     const { data: profile } = await supabase
       .from("profiles").select("username").eq("id", data.user!.id).single();
-    window.location.href = profile?.username ? "/dashboard" : "/setup/username";
+    window.location.href = profile?.username ? "/" : "/setup/username";
   };
 
   return (

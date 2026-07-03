@@ -95,7 +95,7 @@ export default function JarDetailPage() {
       <SiteHeader />
       <div className="mx-auto max-w-5xl px-4 py-8">
         <p className="text-sm text-red-600">{message || "Jar not found."}</p>
-        <a href="/dashboard" className="mt-3 inline-block text-sm text-wj-plum hover:underline">← Back to Home</a>
+        <a href="/" className="mt-3 inline-block text-sm text-wj-plum hover:underline">← Back to Home</a>
       </div>
     </div>
   );

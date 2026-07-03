@@ -15,7 +15,7 @@ export default function SetupUsernamePage() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) { window.location.href = "/login"; return; }
       const { data: profile } = await supabase.from("profiles").select("username").eq("id", userData.user.id).single();
-      if (profile?.username) { window.location.href = "/dashboard"; return; }
+      if (profile?.username) { window.location.href = "/"; return; }
       setLoading(false);
     };
     check();
@@ -36,7 +36,7 @@ export default function SetupUsernamePage() {
       else { setMessage(error.message); }
       return;
     }
-    window.location.href = "/dashboard";
+    window.location.href = "/";
   };
 
   if (loading) return (

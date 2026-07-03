@@ -32,11 +32,13 @@ export default function NewJarPage() {
   const [atLimit, setAtLimit] = useState(false);
   const [isVerified, setIsVerified] = useState(true);
   const [missingFields, setMissingFields] = useState<string[]>([]);
+  const [ownUsername, setOwnUsername] = useState("");
 
   useEffect(() => {
     const check = async () => {
       const auth = await requireUsername();
       if (!auth) return;
+      setOwnUsername(auth.username);
 
       if (!auth.isVerified) {
         const { data: profile } = await supabase
@@ -140,7 +142,7 @@ export default function NewJarPage() {
       <SiteHeader activeTab="home" />
       <div className="mx-auto max-w-xl px-4 py-6">
         <div className="flex items-center gap-3 mb-5 text-sm">
-          <a href="/dashboard" className="text-wj-muted hover:text-wj-text">← Home</a>
+          <a href="/" className="text-wj-muted hover:text-wj-text">← Home</a>
         </div>
         <div className="rounded-2xl bg-wj-card border border-wj-card-border p-6 text-center" style={{ boxShadow: "var(--wj-shadow)" }}>
           <p className="text-2xl mb-3">🫙</p>
@@ -148,7 +150,7 @@ export default function NewJarPage() {
           <p className="text-sm text-wj-muted mb-5">
             You can have up to {MAX_JARS} active jars. Complete or delete one to create a new jar.
           </p>
-          <a href="/jars" className="inline-block rounded-xl bg-wj-plum px-5 py-2.5 text-sm font-bold text-white hover:bg-wj-plum-mid">
+          <a href={`/u/${ownUsername}`} className="inline-block rounded-xl bg-wj-plum px-5 py-2.5 text-sm font-bold text-white hover:bg-wj-plum-mid">
             View my jars
           </a>
         </div>
@@ -164,7 +166,7 @@ export default function NewJarPage() {
       <div className="mx-auto max-w-xl px-4 py-6">
         <div className="mb-5">
           <div className="flex items-center gap-3 mb-3 text-sm">
-            <a href="/dashboard" className="text-wj-muted hover:text-wj-text">← Home</a>
+            <a href="/" className="text-wj-muted hover:text-wj-text">← Home</a>
             <span className="text-wj-muted">·</span>
             <a href="/jars" className="text-wj-muted hover:text-wj-text">My Jars</a>
           </div>
@@ -252,7 +254,7 @@ export default function NewJarPage() {
               {saving ? "Creating jar…" : "🫙 Create Jar"}
             </button>
             <a
-              href="/dashboard"
+              href="/"
               className="rounded-xl border border-wj-card-border px-5 py-3 text-sm font-semibold text-wj-text hover:bg-wj-cream"
             >
               Cancel

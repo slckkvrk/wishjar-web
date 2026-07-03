@@ -49,7 +49,7 @@ export default function SettingsPage() {
 
       <div className="mx-auto max-w-xl px-4 py-6">
         <div className="flex items-center gap-3 mb-5 text-sm">
-          <a href="/dashboard" className="text-wj-plum hover:underline">← Home</a>
+          <a href="/" className="text-wj-plum hover:underline">← Home</a>
         </div>
 
         <div className="md:hidden mb-4">
