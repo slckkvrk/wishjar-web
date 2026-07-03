@@ -4,12 +4,18 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import SiteHeader from "@/components/SiteHeader";
-import AvatarCircle from "@/components/AvatarCircle";
 import BottomNav from "@/components/BottomNav";
 import PostComposer from "@/components/PostComposer";
 import PostCard from "@/components/PostCard";
+import ProfileHeader from "@/components/ProfileHeader";
 
 type Profile = { id: string; username: string; bio: string | null; created_at: string; is_premium: boolean; avatar_url: string | null; };
+type TrustFields = {
+  first_name: string | null; last_name: string | null; city: string | null; country: string | null;
+  is_verified: boolean; cover_template: string | null;
+  social_instagram: string | null; social_tiktok: string | null; social_youtube: string | null; social_facebook: string | null;
+  contact_email: string | null;
+};
 type Jar = { id: string; title: string; description: string | null; category: string; goal_amount: number | null; };
 type Post = { id: string; content: string; jar_id: string | null; jar_title: string | null; created_at: string; };
 
@@ -18,6 +24,7 @@ export default function ProfilePage() {
   const username = params.username as string;
 
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [trustFields, setTrustFields] = useState<TrustFields | null>(null);
   const [jars, setJars] = useState<Jar[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -35,6 +42,13 @@ export default function ProfilePage() {
       const { data: profileData } = await supabase.from("profiles").select("id, username, bio, created_at, is_premium, avatar_url").eq("username", username).single();
       if (!profileData) { setLoading(false); return; }
       setProfile(profileData);
+
+      const { data: trust } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, city, country, is_verified, cover_template, social_instagram, social_tiktok, social_youtube, social_facebook, contact_email")
+        .eq("id", profileData.id)
+        .single();
+      setTrustFields(trust ?? null);
 
       const [{ data: jarsData }, { data: rawPosts }] = await Promise.all([
         supabase.from("jars").select("id, title, description, category, goal_amount").eq("user_id", profileData.id).order("created_at", { ascending: false }),
@@ -77,7 +91,7 @@ export default function ProfilePage() {
       <SiteHeader />
       <div className="mx-auto max-w-5xl px-4 py-8">
         <p className="text-sm text-wj-text">User <strong>@{username}</strong> not found.</p>
-        <a href="/dashboard" className="mt-2 inline-block text-sm text-wj-plum hover:underline">← Home</a>
+        <a href="/" className="mt-2 inline-block text-sm text-wj-plum hover:underline">← Home</a>
       </div>
     </div>
   );
@@ -91,20 +105,23 @@ export default function ProfilePage() {
       {/* Mobile profile hero */}
       <div className="md:hidden" style={{ background: "#FDFAF3", borderBottom: "1px solid #E8DCBB" }}>
         <div className="px-4 pt-5 pb-4">
-          <div className="flex items-center gap-3 mb-3">
-            <AvatarCircle name={profile.username} size="lg" avatarUrl={profile.avatar_url} />
+          <div className="flex items-start gap-3 mb-3">
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-wj-text">
-                @{profile.username}
-                {profile.is_premium && <span title="Premium account" className="ml-1.5 text-wj-gold">★</span>}
-              </h1>
-              {profile.bio && <p className="text-xs text-wj-muted mt-0.5">{profile.bio}</p>}
-              <p className="text-xs text-wj-muted mt-1">
+              <ProfileHeader profile={{
+                username: profile.username, bio: profile.bio, avatarUrl: profile.avatar_url,
+                firstName: trustFields?.first_name ?? null, lastName: trustFields?.last_name ?? null,
+                city: trustFields?.city ?? null, country: trustFields?.country ?? null,
+                isVerified: trustFields?.is_verified ?? false, coverTemplate: trustFields?.cover_template ?? null,
+                socialInstagram: trustFields?.social_instagram ?? null, socialTiktok: trustFields?.social_tiktok ?? null,
+                socialYoutube: trustFields?.social_youtube ?? null, socialFacebook: trustFields?.social_facebook ?? null,
+                contactEmail: trustFields?.contact_email ?? null,
+              }} />
+              <p className="text-xs text-wj-muted mt-1 px-4">
                 {jars.length} jar{jars.length !== 1 ? "s" : ""} · {posts.length} post{posts.length !== 1 ? "s" : ""}
               </p>
             </div>
             {isOwn && (
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0 px-4 pt-2">
                 <a href="/settings/profile"
                   className="rounded-xl border border-wj-card-border px-3 py-1.5 text-xs font-semibold text-wj-text hover:bg-wj-cream">
                   Edit
@@ -126,7 +143,7 @@ export default function ProfilePage() {
                   backgroundColor: tab === t ? "#3D1A24" : "transparent",
                   color: tab === t ? "white" : "#9B7E6A",
                 }}>
-                {t.charAt(0).toUpperCase() + t.slice(1)} ({t === "posts" ? posts.length : jars.length})
+                {t === "jars" ? "My Jars" : "Posts"} ({t === "posts" ? posts.length : jars.length})
               </button>
             ))}
           </div>
@@ -138,23 +155,24 @@ export default function ProfilePage() {
 
           {/* Desktop profile card */}
           <div className="hidden md:block rounded-2xl p-4 bg-wj-card border border-wj-card-border" style={{ boxShadow: "var(--wj-shadow)" }}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <AvatarCircle name={profile.username} size="lg" avatarUrl={profile.avatar_url} />
-                <div>
-                  <h1 className="text-base font-bold text-wj-text">
-                    @{profile.username}
-                    {profile.is_premium && <span title="Premium account" className="ml-1.5 text-wj-gold">★</span>}
-                  </h1>
-                  {profile.bio && <p className="mt-0.5 text-sm text-wj-muted">{profile.bio}</p>}
-                  <p className="mt-1 text-xs text-wj-muted">
-                    {jars.length} jar{jars.length !== 1 ? "s" : ""} · {posts.length} post{posts.length !== 1 ? "s" : ""}
-                  </p>
-                </div>
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <ProfileHeader profile={{
+                  username: profile.username, bio: profile.bio, avatarUrl: profile.avatar_url,
+                  firstName: trustFields?.first_name ?? null, lastName: trustFields?.last_name ?? null,
+                  city: trustFields?.city ?? null, country: trustFields?.country ?? null,
+                  isVerified: trustFields?.is_verified ?? false, coverTemplate: trustFields?.cover_template ?? null,
+                  socialInstagram: trustFields?.social_instagram ?? null, socialTiktok: trustFields?.social_tiktok ?? null,
+                  socialYoutube: trustFields?.social_youtube ?? null, socialFacebook: trustFields?.social_facebook ?? null,
+                  contactEmail: trustFields?.contact_email ?? null,
+                }} />
+                <p className="mt-1 text-xs text-wj-muted px-4">
+                  {jars.length} jar{jars.length !== 1 ? "s" : ""} · {posts.length} post{posts.length !== 1 ? "s" : ""}
+                </p>
               </div>
               {isOwn && (
                 <a href="/settings/profile"
-                  className="rounded-xl border border-wj-card-border px-3 py-1.5 text-xs font-semibold text-wj-text hover:bg-wj-cream">
+                  className="rounded-xl border border-wj-card-border px-3 py-1.5 text-xs font-semibold text-wj-text hover:bg-wj-cream mt-2 mr-2">
                   Edit profile
                 </a>
               )}
@@ -170,7 +188,7 @@ export default function ProfilePage() {
                   backgroundColor: tab === t ? "#3D1A24" : "transparent",
                   color: tab === t ? "white" : "#9B7E6A",
                 }}>
-                {t.charAt(0).toUpperCase() + t.slice(1)} ({t === "posts" ? posts.length : jars.length})
+                {t === "jars" ? "My Jars" : "Posts"} ({t === "posts" ? posts.length : jars.length})
               </button>
             ))}
           </div>
