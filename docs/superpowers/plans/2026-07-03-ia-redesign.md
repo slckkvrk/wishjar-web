@@ -1086,14 +1086,20 @@ with:
       if (!auth) return;
 
       if (!auth.isVerified) {
-        const { data: profile } = await supabase
-          .from("profiles").select("first_name, last_name, city, country, phone").eq("id", auth.userId).single();
+        // phone is revoked from the base `profiles` table for `authenticated` by Task 1's
+        // migration (same revoke as manifest_line1/2) — it must come from `profiles_private`,
+        // in a query separate from the other four fields, or this whole select fails once
+        // the migration is live (the exact class of bug Task 2's review caught).
+        const [{ data: profile }, { data: privatePhone }] = await Promise.all([
+          supabase.from("profiles").select("first_name, last_name, city, country").eq("id", auth.userId).single(),
+          supabase.from("profiles_private").select("phone").eq("id", auth.userId).single(),
+        ]);
         const missing: string[] = [];
         if (!(profile?.first_name ?? "").trim()) missing.push("first name");
         if (!(profile?.last_name ?? "").trim()) missing.push("last name");
         if (!(profile?.city ?? "").trim()) missing.push("city");
         if (!(profile?.country ?? "").trim()) missing.push("country");
-        if (!(profile?.phone ?? "").trim()) missing.push("phone");
+        if (!(privatePhone?.phone ?? "").trim()) missing.push("phone");
         setMissingFields(missing);
         setIsVerified(false);
         setLoading(false);
@@ -1384,17 +1390,24 @@ Per the Global Constraint on graceful degradation, fetch these in a **separate**
         setSavedUsername(profile.username ?? "");
         setBio(profile.bio ?? "");
       }
-      const { data: trustFields } = await supabase
-        .from("profiles")
-        .select("first_name, last_name, city, country, phone, cover_template, social_instagram, social_tiktok, social_youtube, social_facebook, contact_email")
-        .eq("id", auth.userId)
-        .single();
+      // phone is revoked from the base `profiles` table for `authenticated` (same revoke as
+      // manifest_line1/2, Task 1's migration) -- it must be read from `profiles_private` in a
+      // query separate from the other trust fields, or this whole select fails once the
+      // migration is live, exactly like the bug Task 2's review caught for is_verified.
+      const [{ data: trustFields }, { data: privatePhone }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("first_name, last_name, city, country, cover_template, social_instagram, social_tiktok, social_youtube, social_facebook, contact_email")
+          .eq("id", auth.userId)
+          .single(),
+        supabase.from("profiles_private").select("phone").eq("id", auth.userId).single(),
+      ]);
+      setPhone(privatePhone?.phone ?? "");
       if (trustFields) {
         setFirstName(trustFields.first_name ?? "");
         setLastName(trustFields.last_name ?? "");
         setCity(trustFields.city ?? "");
         setCountry(trustFields.country ?? "");
-        setPhone(trustFields.phone ?? "");
         setCoverTemplate(trustFields.cover_template ?? null);
         setSocialInstagram(trustFields.social_instagram ?? "");
         setSocialTiktok(trustFields.social_tiktok ?? "");
